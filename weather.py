@@ -2,12 +2,11 @@ import json
 import urllib2
 
 API_KEY = ""
-whith open("apikey.txt","r") as f:
-	API_KEY = f.readline()
-print API_KEY
+with open("apikey.txt","r") as f:
+	API_KEY = f.readline().strip()
 
-url_yesterday = 'http://api.wunderground.com/api/API_KEY/geolookup/yesterday/q/MI/Ann_Arbor.json'
-url_forecast = 'http://api.wunderground.com/api/API_KEY/geolookup/forecast/q/MI/Ann_Arbor.json'
+url_yesterday = 'http://api.wunderground.com/api/%s/geolookup/yesterday/q/MI/Ann_Arbor.json' % API_KEY
+url_forecast = 'http://api.wunderground.com/api/%s/geolookup/forecast/q/MI/Ann_Arbor.json' % API_KEY
 
 yesterday = json.loads(urllib2.urlopen(url_yesterday).read())
 forecast = json.loads(urllib2.urlopen(url_forecast).read())
