@@ -4,6 +4,22 @@ from threading import Thread
 
 BLUE_PIN = 21
 
+class LED():
+    def __init__(self):
+        pass
+
+    def fade(self):
+        _t = Thread(self._fade)
+        _t.start()
+
+    def _fade(self):
+        while 1:
+            for dc in range(0, 101, 5):
+                p.ChangeDutyCycle(dc)
+	        sleep(0.1)
+            for dc in range(100, -1, -5):
+                p.ChangeDutyCycle(dc)
+                sleep(0.1)
 
 gpio.setmode(gpio.BCM)
 gpio.setup(BLUE_PIN, gpio.OUT)
@@ -26,20 +42,3 @@ finally:
     print "Cleaning up"
     p.stop()
     gpio.cleanup()
-
-class LED():
-    def __init__(self):
-        pass
-
-    def fade(self):
-        _t = Thread(self._fade)
-        _t.start()
-
-    def _fade(self):
-        while 1:
-            for dc in range(0, 101, 5):
-                p.ChangeDutyCycle(dc)
-	        sleep(0.1)
-            for dc in range(100, -1, -5):
-                p.ChangeDutyCycle(dc)
-                sleep(0.1)
