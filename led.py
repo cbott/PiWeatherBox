@@ -3,43 +3,86 @@ from time import sleep
 from threading import Thread
 
 BLUE_PIN = 21
+gpio.setmode(gpio.BCM)
 
 class LED():
-    def __init__(self):
-        pass
+    def __init__(self, pin):
+        self.pin = pin
+        gpio.setup(self.pin, gpio.OUT)
+        gpio.output(self.pin, gpio.LOW)
+        self.pwm = gpio.PWM(self.pin, 50) # pin, freq (Hz)
+        self.pwm.start(0)
 
-    def fade(self):
-        _t = Thread(target = self._fade)
-	_t.daemon = True
+        self._state = "off"
+        self._brightness = 0
+        self.fade_min = 0
+        self.fade_max = 100
+        self.fade_step = 5
+
+
+        _t = Thread(target = self._loop)
+        _t.daemon = True
         _t.start()
 
-    def _fade(self):
-        while 1:
-            for dc in range(0, 101, 5):
-                p.ChangeDutyCycle(dc)
-	        sleep(0.1)
-            for dc in range(100, -1, -5):
-                p.ChangeDutyCycle(dc)
+    def stop():
+        self._state = "done"
+
+    def set(brightness):
+        """ set the LED to a brightness level 0 to 100 """
+        self._brightness = brightness
+        self._state = "on"
+
+    def fade(self, period = 1):
+        """ Fade the LED on and off """
+        self._period = period
+        self._state = "fade"
+
+    def blink(self, period = 1):
+        """ Blink the LED on and off """
+        self._period = period
+        self._state = "blink"
+
+    def _loop(self):
+        while self._state != "done":
+            while self._state == "off":
+                self.pwm.ChangeDutyCycle(0)
                 sleep(0.1)
 
-gpio.setmode(gpio.BCM)
-gpio.setup(BLUE_PIN, gpio.OUT)
+            while self._state == "on":
+                self.pwm.ChangeDutyCycle(self._brightness)
+                sleep(0.1)
 
-gpio.output(BLUE_PIN, gpio.LOW)
+            while self._state == "fade":
+                pause = self._period * self.fade_step / (2.0 * (self.fade_max - self.fade_min))
+                for dc in range(self.fade_min, self.fade_max+1, self.fade_step):
+                    self.pwm.ChangeDutyCycle(dc)
+                    sleep(pause)
+                for dc in range(self.fade_max, self.fade_min-1, -self.fade_step):
+                    self.pwm.ChangeDutyCycle(dc)
+                    sleep(pause)
 
-p = gpio.PWM(BLUE_PIN, 50) # pin, freq (Hz)
-p.start(0)
+            while self._state == "blink":
+                self.pwm.ChangeDutyCycle(100)
+                sleep(self._period / 2.0)
+                self.pwm.ChangeDutyCycle(0)
+                sleep(self._period / 2.0)
+
+
+        self.pwm.stop()
 
 try:
     blue = LED()
-    blue.fade()
     while 1:
-        raw_input("Still doing things! ")
+        blue.fade()
+        sleep(5)
+        blue.blink()
+        sleep(5)
+        blue.set(50)
+        sleep(5)
 
 except KeyboardInterrupt:
     pass
 
 finally:
     print "Cleaning up"
-    p.stop()
     gpio.cleanup()
