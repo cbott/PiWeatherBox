@@ -9,7 +9,8 @@ class LED():
         pass
 
     def fade(self):
-        _t = Thread(self._fade)
+        _t = Thread(target = self._fade)
+	_t.daemon = True
         _t.start()
 
     def _fade(self):
