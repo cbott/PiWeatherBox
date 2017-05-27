@@ -1,12 +1,29 @@
 import RPi.GPIO as gpio
-from time import sleep
+import time
 
+BUTTON_PIN = 20
 gpio.setmode(gpio.BCM)
-gpio.setup(21, gpio.IN)
+gpio.setup(BUTTON_PIN, gpio.IN)
+
+def on_press(channel):
+    print "Pressed!"
+
+def on_release(channel):
+    print "Released!"
 
 try:
-	while 1:
-		print(gpio.input(21))
-		sleep(0.1)
+    shutdown = false
+    presstime = time.time()
+
+    gpio.add_event_detect(BUTTON_PIN, gpio.RISING, callback = on_press, bouncetime = 100)
+    gpio.add_event_detect(BUTTON_PIN, gpio.FALLING, callback = on_release, bouncetime = 100)
+
+    while not shutdown:
+        print "Doing Stuff"
+        time.sleep(1)
+
 except KeyboardInterrupt:
-	gpio.cleanup()
+    print "Keyboard Interrupt. Shutting Down..."
+
+finally:
+    gpio.cleanup()

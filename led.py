@@ -44,15 +44,15 @@ class LED():
 
     def _loop(self):
         while self._state != "done":
-            while self._state == "off":
+            if self._state == "off":
                 self.pwm.ChangeDutyCycle(0)
                 sleep(0.1)
 
-            while self._state == "on":
+            if self._state == "on":
                 self.pwm.ChangeDutyCycle(self._brightness)
                 sleep(0.1)
 
-            while self._state == "fade":
+            if self._state == "fade":
                 pause = self._period * self.fade_step / (2.0 * (self.fade_max - self.fade_min))
                 for dc in range(self.fade_min, self.fade_max+1, self.fade_step):
                     self.pwm.ChangeDutyCycle(dc)
@@ -61,12 +61,11 @@ class LED():
                     self.pwm.ChangeDutyCycle(dc)
                     sleep(pause)
 
-            while self._state == "blink":
+            if self._state == "blink":
                 self.pwm.ChangeDutyCycle(100)
                 sleep(self._period / 2.0)
                 self.pwm.ChangeDutyCycle(0)
                 sleep(self._period / 2.0)
-
 
         self.pwm.stop()
 
