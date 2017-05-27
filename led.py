@@ -24,10 +24,10 @@ class LED():
         _t.daemon = True
         _t.start()
 
-    def stop():
+    def stop(self):
         self._state = "done"
 
-    def set(brightness):
+    def set(self, brightness):
         """ set the LED to a brightness level 0 to 100 """
         self._brightness = brightness
         self._state = "on"
@@ -71,7 +71,7 @@ class LED():
         self.pwm.stop()
 
 try:
-    blue = LED()
+    blue = LED(BLUE_PIN)
     while 1:
         blue.fade()
         sleep(5)

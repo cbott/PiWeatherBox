@@ -30,7 +30,12 @@ def conditions():
 		return None
 
 if __name__ == "__main__":
-	c = conditions()
+	from time import sleep
+	c = None
+	while c == None:
+		print "Grabbing data..."
+		c = conditions()
+		sleep(3)
 	print "Yesterday's High Temperature:", c['yesterday']['high']
 	print "Today's High Temperature:", c['today']['high']
 	print "Today:", c['today']['conditions']
