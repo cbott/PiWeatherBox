@@ -5,23 +5,27 @@ BUTTON_PIN = 20
 gpio.setmode(gpio.BCM)
 gpio.setup(BUTTON_PIN, gpio.IN)
 
-def on_press(channel):
-    print "Pressed!"
-
-def on_release(channel):
-    print "Released!"
+def on_btn_event(channel):
+    global presstime, shutdown
+    if gpio.input(BUTTON_PIN):
+        print "Button Pressed"
+	presstime = time.time()
+    else:
+        print "Button Released!"
+        elapsed = time.time() - presstime
+        if elapsed > 3:
+            shutdown = True
 
 try:
-    shutdown = false
+    shutdown = False
     presstime = time.time()
 
-    gpio.add_event_detect(BUTTON_PIN, gpio.RISING, callback = on_press, bouncetime = 100)
-    gpio.add_event_detect(BUTTON_PIN, gpio.FALLING, callback = on_release, bouncetime = 100)
+    gpio.add_event_detect(BUTTON_PIN, gpio.BOTH, callback = on_btn_event, bouncetime = 100)
 
+    print "Doing Stuff"
     while not shutdown:
-        print "Doing Stuff"
-        time.sleep(1)
-
+        time.sleep(0.1)
+    print "Shutting Down..."
 except KeyboardInterrupt:
     print "Keyboard Interrupt. Shutting Down..."
 
