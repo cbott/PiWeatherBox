@@ -1,9 +1,6 @@
 import RPi.GPIO as gpio
-from time import sleep
 from threading import Thread
-
-BLUE_PIN = 21
-gpio.setmode(gpio.BCM)
+from time import sleep
 
 class LED():
     def __init__(self, pin):
@@ -26,6 +23,9 @@ class LED():
 
     def stop(self):
         self._state = "done"
+
+    def off(self):
+        self.set(0)
 
     def set(self, brightness):
         """ set the LED to a brightness level 0 to 100 """
@@ -69,19 +69,22 @@ class LED():
 
         self.pwm.stop()
 
-try:
-    blue = LED(BLUE_PIN)
-    while 1:
-        blue.fade()
-        sleep(5)
-        blue.blink()
-        sleep(5)
-        blue.set(50)
-        sleep(5)
+if __name__ == "__main__":
+    BLUE_PIN = 21
+    gpio.setmode(gpio.BCM)
+    try:
+        blue = LED(BLUE_PIN)
+        while 1:
+            blue.fade()
+            sleep(5)
+            blue.blink()
+            sleep(5)
+            blue.set(50)
+            sleep(5)
 
-except KeyboardInterrupt:
-    pass
+    except KeyboardInterrupt:
+        pass
 
-finally:
-    print "Cleaning up"
-    gpio.cleanup()
+    finally:
+        print "Cleaning up"
+        gpio.cleanup()
