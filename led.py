@@ -7,7 +7,7 @@ class LED():
         self.pin = pin
         gpio.setup(self.pin, gpio.OUT)
         gpio.output(self.pin, gpio.LOW)
-        self.pwm = gpio.PWM(self.pin, 50) # pin, freq (Hz)
+        self.pwm = gpio.PWM(self.pin, 75) # pin, freq (Hz)
         self.pwm.start(0)
 
         self._state = "off"
@@ -21,7 +21,7 @@ class LED():
         _t.daemon = True
         _t.start()
 
-    def stop(self):
+    def halt(self):
         self._state = "done"
 
     def off(self):
@@ -70,10 +70,10 @@ class LED():
         self.pwm.stop()
 
 if __name__ == "__main__":
-    BLUE_PIN = 21
+    PIN = 21
     gpio.setmode(gpio.BCM)
     try:
-        blue = LED(BLUE_PIN)
+        blue = LED(PIN)
         while 1:
             blue.fade()
             sleep(5)

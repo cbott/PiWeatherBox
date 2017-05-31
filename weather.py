@@ -14,19 +14,19 @@ def conditions():
         yesterday = json.loads(urllib2.urlopen(url_yesterday).read())
         forecast = json.loads(urllib2.urlopen(url_forecast).read())
         
-        yesterday_high = yesterday['history']['dailysummary'][0]['maxtempi']
+        yesterday_high = float(yesterday['history']['dailysummary'][0]['maxtempi'])
         
-        today_high = forecast['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit']
-        today_rain = forecast['forecast']['simpleforecast']['forecastday'][0]['qpf_allday']['in']
+        today_high = float(forecast['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
+        today_rain = float(forecast['forecast']['simpleforecast']['forecastday'][0]['qpf_allday']['in'])
         today_text = forecast['forecast']['txt_forecast']['forecastday'][0]['fcttext']
         
-        tomorrow_high = forecast['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit']
-        tomorrow_rain = forecast['forecast']['simpleforecast']['forecastday'][1]['qpf_allday']['in']
+        tomorrow_high = float(forecast['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
+        tomorrow_rain = float(forecast['forecast']['simpleforecast']['forecastday'][1]['qpf_allday']['in'])
 
         return {'yesterday':{'high':yesterday_high},
                 'today':{'high':today_high, 'rain':today_rain, 'conditions':today_text},
                 'tomorrow':{'high':tomorrow_high, 'rain':tomorrow_rain}}
-    except Exception:
+    except Exception as e:
         return None
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     while c == None:
         print "Grabbing data..."
         c = conditions()
-        sleep(3)
+        sleep(8)
     print "Yesterday's High Temperature:", c['yesterday']['high']
     print "Today's High Temperature:", c['today']['high']
     print "Today:", c['today']['conditions']

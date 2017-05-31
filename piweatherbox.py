@@ -6,7 +6,7 @@ RED_PIN = 6
 GREEN_PIN = 13
 BLUE_PIN = 19
 
-REFRESH_TIME = 1 # minutes
+REFRESH_TIME = 10 # minutes
 
 from led import LED
 import weather
@@ -20,7 +20,7 @@ try:
     while 1:
         wc = weather.conditions()
         while wc is None:
-            sleep(2)
+            time.sleep(10)
             wc = weather.conditions()
         print time.strftime("Acquired weather coditions on %B %d at %I:%M:%S")
 
@@ -32,7 +32,9 @@ try:
             prev_temp = wc['yesterday']['high']
             next_temp = wc['today']['high']          
 
-        dt = next_temp = prev_temp
+        print "Prev Temp:", prev_temp
+        print "Next Temp:", next_temp
+        dt = next_temp - prev_temp
         rled.off()
         gled.off()
         bled.off()
@@ -53,6 +55,7 @@ try:
 
     gpio.cleanup()
 
-except Exception as e:
+except (Exception, KeyboardInterrupt) as e:
+    print "Cleaning Up"
     gpio.cleanup()
     raise
