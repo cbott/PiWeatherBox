@@ -52,10 +52,10 @@ try:
 
         time.sleep(REFRESH_TIME * 60)
 
-
+    print "PiWeatherBox shutting down normally..."
     gpio.cleanup()
 
 except (Exception, KeyboardInterrupt) as e:
-    print "Cleaning Up"
+    print "Exiting due to error condition. Cleaning up first..."
     gpio.cleanup()
     raise
