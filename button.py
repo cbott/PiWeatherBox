@@ -1,29 +1,41 @@
 import RPi.GPIO as gpio
 import time
 
-BUTTON_PIN = 20
+BUTTON_PIN = 26
 gpio.setmode(gpio.BCM)
-gpio.setup(BUTTON_PIN, gpio.IN)
 
-def on_btn_event(channel):
-    global presstime, shutdown
-    if gpio.input(BUTTON_PIN):
-        print "Button Pressed"
-	presstime = time.time()
-    else:
-        print "Button Released!"
-        elapsed = time.time() - presstime
-        if elapsed > 3:
-            shutdown = True
+class Button:
+    def __init__(self, pin):
+        self.pin = pin
+        gpio.setup(self.pin, gpio.IN)
+        gpio.add_event_detect(self.pin, gpio.BOTH, callback = self._on_event, bouncetime = 100)
+        
+        self._presstime = time.time()
+        self._active = False
+    def get_pressed(self):
+        # Returns whether or not the button is currently pressed
+        return gpio.input(self.pin)
+    def hold_time(self):
+        # Returns how long the button has been pressed for, or 0 if it is not pressed
+        if not self._active:
+            return 0
+        else:
+            return time.time() - self._presstime
+        return self.hold_time
+    def _on_event(self, channel):
+        if self.get_pressed():
+            print "Button Pressed"
+            self._active = True
+            self._presstime = time.time()
+        else:
+            print "Button Released"
+            self._active = False
 
 try:
-    shutdown = False
-    presstime = time.time()
-
-    gpio.add_event_detect(BUTTON_PIN, gpio.BOTH, callback = on_btn_event, bouncetime = 100)
+    btn = Button(BUTTON_PIN)
 
     print "Doing Stuff"
-    while not shutdown:
+    while btn.hold_time() < 3:
         time.sleep(0.1)
     print "Shutting Down..."
 except KeyboardInterrupt:
