@@ -12,16 +12,18 @@ class Button:
         
         self._presstime = time.time()
         self._active = False
+
     def get_pressed(self):
         # Returns whether or not the button is currently pressed
         return gpio.input(self.pin)
+
     def hold_time(self):
         # Returns how long the button has been pressed for, or 0 if it is not pressed
         if not self._active:
             return 0
         else:
             return time.time() - self._presstime
-        return self.hold_time
+
     def _on_event(self, channel):
         if self.get_pressed():
             print "Button Pressed"
