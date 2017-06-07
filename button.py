@@ -19,10 +19,10 @@ class Button:
 
     def hold_time(self):
         # Returns how long the button has been pressed for, or 0 if it is not pressed
-        if not self._active:
-            return 0
-        else:
+        if self._active:
             return time.time() - self._presstime
+        else:
+            return 0
 
     def _on_event(self, channel):
         if self.get_pressed():
