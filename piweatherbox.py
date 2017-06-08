@@ -6,8 +6,10 @@ RED_PIN = 6
 GREEN_PIN = 13
 BLUE_PIN = 19
 
-REFRESH_TIME = 10 # minutes
+REFRESH_TIME = 600 # seconds
+SHUTDOWN_TIME = 2 # how long to hold the button to trigger a shutdown
 
+from button import TriggerButton
 from led import LED
 import weather
 
@@ -16,8 +18,10 @@ try:
     rled = LED(RED_PIN)
     gled = LED(GREEN_PIN)
     bled = LED(BLUE_PIN)
-
-    while 1:
+    btn = TriggerButton(26)
+    
+    shutdown = False
+    while not shutdown:
         wc = weather.conditions()
         while wc is None:
             time.sleep(10)
@@ -50,7 +54,13 @@ try:
         else:
             bled.fade()
 
-        time.sleep(REFRESH_TIME * 60)
+        starttime = time.time()
+        while time.time() - starttime < REFRESH_TIME:
+            if btn.get_held() > SHUTDOWN_TIME:
+                shutdown = True
+                break
+            time.sleep(1)
+                    
 
     print "PiWeatherBox shutting down normally..."
     gpio.cleanup()
