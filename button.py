@@ -1,9 +1,6 @@
 import RPi.GPIO as gpio
 import time
 
-BUTTON_PIN = 26
-gpio.setmode(gpio.BCM)
-
 class TriggerButton:
     """ A button that triggers events when pressed or held for a length of time """
     def __init__(self, pin, press_callback = lambda:None):
@@ -41,6 +38,9 @@ class TriggerButton:
 
 
 if __name__ == "__main__":
+    BUTTON_PIN = 26
+    gpio.setmode(gpio.BCM)
+    
     try:
         btn = TriggerButton(BUTTON_PIN)
 
