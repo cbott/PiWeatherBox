@@ -2,14 +2,18 @@ import RPi.GPIO as gpio
 from threading import Thread
 import time
 
-BTN_PIN = 5
-RED_PIN = 6
-GREEN_PIN = 13
-BLUE_PIN = 19
+RED_PIN = 16
+GREEN_PIN = 20
+BLUE_PIN = 21
+BTN_PIN = 26
 
 REFRESH_TIME = 600 # seconds
 LIGHT_TIME = 300 # how long to keep the LED on after pressing the button
 SHUTDOWN_TIME = 2 # how long to hold the button to trigger a shutdown
+
+# Weather Constants
+TEMP_CHANGE_LARGE = 7 # deg F
+TEMP_CHANGE_SMALL = 3 # deg F
 
 from button import TriggerButton
 from led import LED
@@ -45,15 +49,16 @@ try:
     rled = LED(RED_PIN)
     gled = LED(GREEN_PIN)
     bled = LED(BLUE_PIN)
-    btn = TriggerButton(26, press_callback = on_press)
+    btn = TriggerButton(BTN_PIN, press_callback = on_press)
 
-    weather_thread = Thread(target = self.update_forecast)
+    weather_thread = Thread(target = update_forecast)
     weather_thread.daemon = True
 
     temp_change = 0
-    last_update_time = time.time()
+    last_update_time = 0
     led_start_time = 0
     shutdown = False
+    print "Starting PiWeatherBox Mainloop..."
     while not shutdown:
         # Periodically update forecast asynchronously
         if time.time() - last_update_time > REFRESH_TIME:
@@ -68,19 +73,19 @@ try:
 
         # Turn on indicator LED for a fixed amount of time after button press
         if time.time() - led_start_time < LIGHT_TIME:
-            if temp_change >= 8:
+            if temp_change >= TEMP_CHANGE_LARGE:
                 rled.fade()
                 gled.off()
                 bled.off()
-            elif temp_change >= 3:
+            elif temp_change >= TEMP_CHANGE_SMALL:
                 rled.set(100)
                 gled.off()
                 bled.off()
-            elif temp_change > -3:
+            elif temp_change > -TEMP_CHANGE_SMALL:
                 rled.off()
                 gled.set(100)
                 bled.off()
-            elif temp_change > -8:
+            elif temp_change > -TEMP_CHANGE_LARGE:
                 rled.off()
                 gled.off()
                 bled.set(100)

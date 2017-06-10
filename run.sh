@@ -5,15 +5,18 @@
 ## ./run.sh
 
 LOGFILE=log.txt
+exitcode=1
 
-echo -e "\n\n[`date`] Starting Python Script" >> $LOGFILE
+while [ $exitcode -ne 0 ]
+do
+echo -e "\n[`date`] Starting Python Script" >> $LOGFILE
 python piweatherbox.py &>> $LOGFILE
 exitcode=$?
 echo "[`date`] Python Script Exited With Code $exitcode" >> $LOGFILE
 
-# Perhaps add something to restart the program if it crashed
-#if [ $exitcode -eq 0 ]; then
-#echo -e "Complete\n" >> $LOGFILE
-#else
-#echo "Bad exit condition. Attempting program restart..." >> $LOGFILE
-#fi
+# Restart program if it exits with nonzero exit code
+if [ $exitcode -ne 0 ]; then
+  echo "Bad exit condition. Attempting program restart..." >> $LOGFILE
+fi
+done
+echo -e "Program exited normally -- Finished\n" >> $LOGFILE

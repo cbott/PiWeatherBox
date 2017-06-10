@@ -10,7 +10,7 @@ class LED():
         self.pwm = gpio.PWM(self.pin, 75) # pin, freq (Hz)
         self.pwm.start(0)
 
-        self._state = "off"
+        self._state = "on"
         self._brightness = 0
         self.fade_min = 0
         self.fade_max = 100
@@ -44,10 +44,6 @@ class LED():
 
     def _loop(self):
         while self._state != "done":
-            if self._state == "off":
-                self.pwm.ChangeDutyCycle(0)
-                sleep(0.1)
-
             if self._state == "on":
                 self.pwm.ChangeDutyCycle(self._brightness)
                 sleep(0.1)
