@@ -18,7 +18,7 @@ class LED():
 
 
         _t = Thread(target = self._loop)
-        _t.daemon = True
+        #_t.daemon = True
         _t.start()
 
     def halt(self):

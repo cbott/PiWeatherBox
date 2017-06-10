@@ -1,4 +1,5 @@
 import RPi.GPIO as gpio
+import sys
 from threading import Thread
 import time
 
@@ -19,12 +20,17 @@ from button import TriggerButton
 from led import LED
 import weather
 
-def update_forecast():
+def update_forecast(main_thread):
     global temp_change
 
     wc = weather.conditions()
+    if not main_thread.is_alive():
+            return
     while wc is None:
-        time.sleep(10)
+        for i in range(10):
+            sleep(1)
+            if not main_thread.is_alive():
+                return
         wc = weather.conditions()
     print time.strftime("Acquired weather coditions on %B %d at %I:%M:%S")
 
@@ -44,6 +50,12 @@ def on_press():
     global led_start_time
     led_start_time = time.time()
 
+def cleanup():
+    rled.halt()
+    gled.halt()
+    bled.halt()
+    gpio.cleanup()
+
 try:
     gpio.setmode(gpio.BCM)
     rled = LED(RED_PIN)
@@ -52,7 +64,7 @@ try:
     btn = TriggerButton(BTN_PIN, press_callback = on_press)
 
     weather_thread = Thread(target = update_forecast)
-    weather_thread.daemon = True
+    #weather_thread.daemon = True
 
     temp_change = 0
     last_update_time = 0
@@ -68,7 +80,7 @@ try:
                     weather_thread.start()
                 except RuntimeError:
                     weather_thread = Thread(target = self.update_forecast)
-                    weather_thread.daemon = True
+                    #weather_thread.daemon = True
                     weather_thread.start()
 
         # Turn on indicator LED for a fixed amount of time after button press
@@ -103,16 +115,14 @@ try:
             shutdown = True
             break
 
+        sys.stdout.flush()
         time.sleep(1)
                     
 
     print "PiWeatherBox shutting down normally..."
-    rled.halt()
-    gled.halt()
-    bled.halt()
-    gpio.cleanup()
+    cleanup()
 
 except (Exception, KeyboardInterrupt) as e:
     print "Exiting due to error condition. Cleaning up first..."
-    gpio.cleanup()
+    cleanup()
     raise
