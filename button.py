@@ -27,12 +27,12 @@ class TriggerButton:
 
     def _on_event(self, channel):
         if self.get_pressed():
-            #print "Button Pressed"
+            #print("Button Pressed")
             self._active = True
             self._presstime = time.time()
             self.press_callback()
         else:
-            #print "Button Released"
+            #print("Button Released")
             self._active = False
             self._presstime = time.time()
 
@@ -44,12 +44,12 @@ if __name__ == "__main__":
     try:
         btn = TriggerButton(BUTTON_PIN)
 
-        print "Doing Stuff"
+        print("Doing Stuff")
         while btn.get_held() < 3:
             time.sleep(0.1)
-        print "Shutting Down..."
+        print("Shutting Down...")
     except KeyboardInterrupt:
-        print "Keyboard Interrupt. Shutting Down..."
+        print("Keyboard Interrupt. Shutting Down...")
 
     finally:
         gpio.cleanup()

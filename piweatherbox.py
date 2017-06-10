@@ -1,6 +1,6 @@
 import RPi.GPIO as gpio
 import sys
-from threading import Thread
+import threading
 import time
 
 RED_PIN = 16
@@ -20,19 +20,19 @@ from button import TriggerButton
 from led import LED
 import weather
 
-def update_forecast(main_thread):
+def update_forecast():
     global temp_change
 
     wc = weather.conditions()
-    if not main_thread.is_alive():
+    if not threading.main_thread().is_alive():
             return
     while wc is None:
         for i in range(10):
-            sleep(1)
-            if not main_thread.is_alive():
+            time.sleep(1)
+            if not threading.main_thread().is_alive():
                 return
         wc = weather.conditions()
-    print time.strftime("Acquired weather coditions on %B %d at %I:%M:%S")
+    print(time.strftime("Acquired weather coditions on %B %d at %I:%M:%S"))
 
     hour = time.localtime()[3]
     if hour > 14: # 3 PM or later, give conditions for tomorrow
@@ -42,8 +42,8 @@ def update_forecast(main_thread):
         prev_temp = wc['yesterday']['high']
         next_temp = wc['today']['high']          
 
-    print "Prev Temp:", prev_temp
-    print "Next Temp:", next_temp
+    print("Prev Temp:", prev_temp)
+    print("Next Temp:", next_temp)
     temp_change = next_temp - prev_temp
 
 def on_press():
@@ -63,14 +63,14 @@ try:
     bled = LED(BLUE_PIN)
     btn = TriggerButton(BTN_PIN, press_callback = on_press)
 
-    weather_thread = Thread(target = update_forecast)
+    weather_thread = threading.Thread(target = update_forecast)
     #weather_thread.daemon = True
 
     temp_change = 0
     last_update_time = 0
     led_start_time = 0
     shutdown = False
-    print "Starting PiWeatherBox Mainloop..."
+    print("Starting PiWeatherBox Mainloop...")
     while not shutdown:
         # Periodically update forecast asynchronously
         if time.time() - last_update_time > REFRESH_TIME:
@@ -79,7 +79,7 @@ try:
                 try:
                     weather_thread.start()
                 except RuntimeError:
-                    weather_thread = Thread(target = self.update_forecast)
+                    weather_thread = threading.Thread(target = self.update_forecast)
                     #weather_thread.daemon = True
                     weather_thread.start()
 
@@ -119,10 +119,10 @@ try:
         time.sleep(1)
                     
 
-    print "PiWeatherBox shutting down normally..."
+    print("PiWeatherBox shutting down normally...")
     cleanup()
 
 except (Exception, KeyboardInterrupt) as e:
-    print "Exiting due to error condition. Cleaning up first..."
+    print("Exiting due to error condition. Cleaning up first...")
     cleanup()
     raise

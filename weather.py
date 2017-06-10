@@ -1,5 +1,5 @@
 import json
-import urllib2
+from urllib.request import urlopen
 
 API_KEY = ""
 with open("apikey.txt","r") as f:
@@ -11,8 +11,8 @@ def conditions():
     url_forecast = 'http://api.wunderground.com/api/%s/geolookup/forecast/q/MI/Ann_Arbor.json' % API_KEY
 
     try:
-        yesterday = json.loads(urllib2.urlopen(url_yesterday).read())
-        forecast = json.loads(urllib2.urlopen(url_forecast).read())
+        yesterday = json.loads(urlopen(url_yesterday).read().decode('utf8'))
+        forecast = json.loads(urlopen(url_forecast).read().decode('utf8'))
         
         yesterday_high = float(yesterday['history']['dailysummary'][0]['maxtempi'])
         
@@ -27,18 +27,19 @@ def conditions():
                 'today':{'high':today_high, 'rain':today_rain, 'conditions':today_text},
                 'tomorrow':{'high':tomorrow_high, 'rain':tomorrow_rain}}
     except Exception as e:
+        print(e)
         return None
 
 if __name__ == "__main__":
     from time import sleep
     c = None
     while c == None:
-        print "Grabbing data..."
+        print("Grabbing data...")
         c = conditions()
         sleep(8)
-    print "Yesterday's High Temperature:", c['yesterday']['high']
-    print "Today's High Temperature:", c['today']['high']
-    print "Today:", c['today']['conditions']
-    print "Rain Today:", c['today']['rain']
-    print "Tomorrow's High Temperature", c['tomorrow']['high']
-    print "Rain Tomorrow:", c['tomorrow']['rain']
+    print("Yesterday's High Temperature:", c['yesterday']['high'])
+    print("Today's High Temperature:", c['today']['high'])
+    print("Today:", c['today']['conditions'])
+    print("Rain Today:", c['today']['rain'])
+    print("Tomorrow's High Temperature", c['tomorrow']['high'])
+    print("Rain Tomorrow:", c['tomorrow']['rain'])

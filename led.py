@@ -82,5 +82,5 @@ if __name__ == "__main__":
         pass
 
     finally:
-        print "Cleaning up"
+        print("Cleaning up")
         gpio.cleanup()
