@@ -18,7 +18,6 @@ class LED():
 
 
         _t = Thread(target = self._loop)
-        #_t.daemon = True
         _t.start()
 
     def halt(self):
@@ -37,8 +36,9 @@ class LED():
         self._period = period
         self._state = "fade"
 
-    def blink(self, period = 1):
+    def blink(self, period = 1, brightness = 100):
         """ Blink the LED on and off """
+        self._brightness = brightness
         self._period = period
         self._state = "blink"
 
@@ -58,7 +58,7 @@ class LED():
                     sleep(pause)
 
             if self._state == "blink":
-                self.pwm.ChangeDutyCycle(100)
+                self.pwm.ChangeDutyCycle(self._brightness)
                 sleep(self._period / 2.0)
                 self.pwm.ChangeDutyCycle(0)
                 sleep(self._period / 2.0)

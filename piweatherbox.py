@@ -64,7 +64,6 @@ try:
     btn = TriggerButton(BTN_PIN, press_callback = on_press)
 
     weather_thread = threading.Thread(target = update_forecast)
-    #weather_thread.daemon = True
 
     temp_change = 0
     last_update_time = 0
@@ -80,7 +79,6 @@ try:
                     weather_thread.start()
                 except RuntimeError:
                     weather_thread = threading.Thread(target = self.update_forecast)
-                    #weather_thread.daemon = True
                     weather_thread.start()
 
         # Turn on indicator LED for a fixed amount of time after button press
