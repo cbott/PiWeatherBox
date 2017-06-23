@@ -8,13 +8,14 @@ GREEN_PIN = 20
 BLUE_PIN = 21
 BTN_PIN = 26
 
-REFRESH_TIME = 600 # seconds
+REFRESH_TIME = 1800 # seconds, time between weather updates
 LIGHT_TIME = 300 # how long to keep the LED on after pressing the button
 SHUTDOWN_TIME = 2 # how long to hold the button to trigger a shutdown
 
 # Weather Constants
 TEMP_CHANGE_LARGE = 7 # deg F
 TEMP_CHANGE_SMALL = 3 # deg F
+RAIN_THRESHOLD = 0.01 # inches
 
 from button import TriggerButton
 from led import LED
@@ -22,6 +23,7 @@ import weather
 
 def update_forecast():
     global temp_change
+    global upcoming_rain
 
     wc = weather.conditions()
     if not threading.main_thread().is_alive():
@@ -38,13 +40,16 @@ def update_forecast():
     if hour > 14: # 3 PM or later, give conditions for tomorrow
         prev_temp = wc['today']['high']
         next_temp = wc['tomorrow']['high']
+        next_rain = wc['tomorrow']['rain']
     else: # earlier than 3 PM, give conditions for today
         prev_temp = wc['yesterday']['high']
-        next_temp = wc['today']['high']          
+        next_temp = wc['today']['high']
+        next_rain = wc['today']['rain']     
 
     print("Prev Temp:", prev_temp)
     print("Next Temp:", next_temp)
     temp_change = next_temp - prev_temp
+    upcoming_rain = next_rain
 
 def on_press():
     global led_start_time
@@ -66,8 +71,11 @@ try:
     weather_thread = threading.Thread(target = update_forecast)
 
     temp_change = 0
+    upcoming_rain = 0
     last_update_time = 0
     led_start_time = 0
+    rain_light_time = 0
+
     shutdown = False
     print("Starting PiWeatherBox Mainloop...")
     while not shutdown:
@@ -83,7 +91,14 @@ try:
 
         # Turn on indicator LED for a fixed amount of time after button press
         if time.time() - led_start_time < LIGHT_TIME:
-            if temp_change >= TEMP_CHANGE_LARGE:
+            if upcoming_rain >= RAIN_THRESHOLD and time.time() - rain_light_time > 3:
+                # Every 3 seconds, blink yellow if it's going to rain
+                rain_light_time = time.time()
+                rled.set(100)
+                gled.set(50)
+                bled.off()
+                # otherwise just set the LED to indicate temperature
+            elif temp_change >= TEMP_CHANGE_LARGE:
                 rled.fade()
                 gled.off()
                 bled.off()

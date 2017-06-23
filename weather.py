@@ -1,4 +1,5 @@
 import json
+import time
 from urllib.request import urlopen
 
 API_KEY = ""
@@ -27,13 +28,13 @@ def conditions():
                 'today':{'high':today_high, 'rain':today_rain, 'conditions':today_text},
                 'tomorrow':{'high':tomorrow_high, 'rain':tomorrow_rain}}
     except Exception as e:
-        print(e)
+        print(time.strftime("Error contacting Wunderground API on %B %d at %I:%M:%S -- "), e)
         return None
 
 if __name__ == "__main__":
     from time import sleep
     c = None
-    while c == None:
+    while c is None:
         print("Grabbing data...")
         c = conditions()
         sleep(8)
