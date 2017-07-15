@@ -28,7 +28,7 @@ def conditions():
                 'today':{'high':today_high, 'rain':today_rain, 'conditions':today_text},
                 'tomorrow':{'high':tomorrow_high, 'rain':tomorrow_rain}}
     except Exception as e:
-        print(time.strftime("Error contacting Wunderground API on %B %d at %I:%M:%S -- "), e)
+        print(time.strftime("Error contacting Wunderground API on %B %d at %H:%M:%S -- "), e)
         return None
 
 if __name__ == "__main__":

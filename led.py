@@ -15,6 +15,7 @@ class LED():
         self.fade_min = 0
         self.fade_max = 100
         self.fade_step = 5
+        self.update_time = 0.01 # seconds, time that update loop takes
 
 
         _t = Thread(target = self._loop)
@@ -46,7 +47,7 @@ class LED():
         while self._state != "done":
             if self._state == "on":
                 self.pwm.ChangeDutyCycle(self._brightness)
-                sleep(0.1)
+                sleep(self.update_time)
 
             if self._state == "fade":
                 pause = self._period * self.fade_step / (2.0 * (self.fade_max - self.fade_min))
