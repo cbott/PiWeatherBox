@@ -15,7 +15,7 @@ SHUTDOWN_TIME = 2 # how long to hold the button to trigger a shutdown
 # Weather Constants
 TEMP_CHANGE_LARGE = 7 # deg F
 TEMP_CHANGE_SMALL = 3 # deg F
-RAIN_THRESHOLD = 0.01 # inches
+RAIN_THRESHOLD = 0.1 # inches
 
 from button import TriggerButton
 from led import LED
@@ -34,7 +34,7 @@ def update_forecast():
             if not threading.main_thread().is_alive():
                 return
         wc = weather.conditions()
-    print(time.strftime("Acquired weather coditions on %B %d at %I:%M:%S"))
+    print(time.strftime("Acquired weather coditions on %B %d at %H:%M:%S"))
 
     hour = time.localtime()[3]
     if hour > 14: # 3 PM or later, give conditions for tomorrow
