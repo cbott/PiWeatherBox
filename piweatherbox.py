@@ -48,6 +48,7 @@ def update_forecast():
 
     print("Prev Temp:", prev_temp)
     print("Next Temp:", next_temp)
+    print("Next Rain:", next_rain)
     temp_change = next_temp - prev_temp
     upcoming_rain = next_rain
 
@@ -124,7 +125,7 @@ try:
             bled.off()
 
         # Shutdown when button is held
-        if btn.get_held() > SHUTDOWN_TIME:
+        if btn.get_pressed() and (btn.get_held() > SHUTDOWN_TIME):
             shutdown = True
             break
 
