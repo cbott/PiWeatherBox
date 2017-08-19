@@ -2,12 +2,13 @@ import RPi.GPIO as gpio
 from threading import Thread
 from time import sleep
 
+
 class LED():
     def __init__(self, pin):
         self.pin = pin
         gpio.setup(self.pin, gpio.OUT)
         gpio.output(self.pin, gpio.LOW)
-        self.pwm = gpio.PWM(self.pin, 75) # pin, freq (Hz)
+        self.pwm = gpio.PWM(self.pin, 75)  # pin, freq (Hz)
         self.pwm.start(0)
 
         self._state = "on"
@@ -15,10 +16,9 @@ class LED():
         self.fade_min = 0
         self.fade_max = 100
         self.fade_step = 5
-        self.update_time = 0.01 # seconds, time that update loop takes
+        self.update_time = 0.01  # seconds, time that update loop takes
 
-
-        _t = Thread(target = self._loop)
+        _t = Thread(target=self._loop)
         _t.start()
 
     def halt(self):
@@ -32,12 +32,12 @@ class LED():
         self._brightness = brightness
         self._state = "on"
 
-    def fade(self, period = 1):
+    def fade(self, period=1):
         """ Fade the LED on and off """
         self._period = period
         self._state = "fade"
 
-    def blink(self, period = 1, brightness = 100):
+    def blink(self, period=1, brightness=100):
         """ Blink the LED on and off """
         self._brightness = brightness
         self._period = period
@@ -51,10 +51,10 @@ class LED():
 
             if self._state == "fade":
                 pause = self._period * self.fade_step / (2.0 * (self.fade_max - self.fade_min))
-                for dc in range(self.fade_min, self.fade_max+1, self.fade_step):
+                for dc in range(self.fade_min, self.fade_max + 1, self.fade_step):
                     self.pwm.ChangeDutyCycle(dc)
                     sleep(pause)
-                for dc in range(self.fade_max, self.fade_min-1, -self.fade_step):
+                for dc in range(self.fade_max, self.fade_min - 1, -self.fade_step):
                     self.pwm.ChangeDutyCycle(dc)
                     sleep(pause)
 
@@ -65,6 +65,7 @@ class LED():
                 sleep(self._period / 2.0)
 
         self.pwm.stop()
+
 
 if __name__ == "__main__":
     PIN = 13

@@ -3,8 +3,9 @@ import time
 from urllib.request import urlopen
 
 API_KEY = ""
-with open("apikey.txt","r") as f:
+with open("apikey.txt", "r") as f:
     API_KEY = f.readline().strip()
+
 
 def conditions():
     """ Returns relevant weather conditions for yesterday, today, and tomorrow """
@@ -14,22 +15,23 @@ def conditions():
     try:
         yesterday = json.loads(urlopen(url_yesterday).read().decode('utf8'))
         forecast = json.loads(urlopen(url_forecast).read().decode('utf8'))
-        
+
         yesterday_high = float(yesterday['history']['dailysummary'][0]['maxtempi'])
-        
+
         today_high = float(forecast['forecast']['simpleforecast']['forecastday'][0]['high']['fahrenheit'])
         today_rain = float(forecast['forecast']['simpleforecast']['forecastday'][0]['qpf_allday']['in'])
         today_text = forecast['forecast']['txt_forecast']['forecastday'][0]['fcttext']
-        
+
         tomorrow_high = float(forecast['forecast']['simpleforecast']['forecastday'][1]['high']['fahrenheit'])
         tomorrow_rain = float(forecast['forecast']['simpleforecast']['forecastday'][1]['qpf_allday']['in'])
 
-        return {'yesterday':{'high':yesterday_high},
-                'today':{'high':today_high, 'rain':today_rain, 'conditions':today_text},
-                'tomorrow':{'high':tomorrow_high, 'rain':tomorrow_rain}}
+        return {'yesterday': {'high': yesterday_high},
+                'today': {'high': today_high, 'rain': today_rain, 'conditions': today_text},
+                'tomorrow': {'high': tomorrow_high, 'rain': tomorrow_rain}}
     except Exception as e:
         print(time.strftime("Error contacting Wunderground API on %B %d at %H:%M:%S -- "), e)
         return None
+
 
 if __name__ == "__main__":
     from time import sleep

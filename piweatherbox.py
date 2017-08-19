@@ -3,23 +3,24 @@ import sys
 import threading
 import time
 
+from button import TriggerButton
+from led import LED
+import weather
+
 RED_PIN = 16
 GREEN_PIN = 20
 BLUE_PIN = 21
 BTN_PIN = 26
 
-REFRESH_TIME = 1800 # seconds, time between weather updates
-LIGHT_TIME = 300 # how long to keep the LED on after pressing the button
-SHUTDOWN_TIME = 2 # how long to hold the button to trigger a shutdown
+REFRESH_TIME = 1800  # seconds, time between weather updates
+LIGHT_TIME = 300  # how long to keep the LED on after pressing the button
+SHUTDOWN_TIME = 2  # how long to hold the button to trigger a shutdown
 
 # Weather Constants
-TEMP_CHANGE_LARGE = 7 # deg F
-TEMP_CHANGE_SMALL = 3 # deg F
-RAIN_THRESHOLD = 0.1 # inches
+TEMP_CHANGE_LARGE = 7  # deg F
+TEMP_CHANGE_SMALL = 3  # deg F
+RAIN_THRESHOLD = 0.1  # inches
 
-from button import TriggerButton
-from led import LED
-import weather
 
 def update_forecast():
     global temp_change
@@ -37,14 +38,14 @@ def update_forecast():
     print(time.strftime("Acquired weather coditions on %B %d at %H:%M:%S"))
 
     hour = time.localtime()[3]
-    if hour > 14: # 3 PM or later, give conditions for tomorrow
+    if hour > 14:  # 3 PM or later, give conditions for tomorrow
         prev_temp = wc['today']['high']
         next_temp = wc['tomorrow']['high']
         next_rain = wc['tomorrow']['rain']
-    else: # earlier than 3 PM, give conditions for today
+    else:  # earlier than 3 PM, give conditions for today
         prev_temp = wc['yesterday']['high']
         next_temp = wc['today']['high']
-        next_rain = wc['today']['rain']     
+        next_rain = wc['today']['rain']
 
     print("Prev Temp:", prev_temp)
     print("Next Temp:", next_temp)
@@ -52,9 +53,11 @@ def update_forecast():
     temp_change = next_temp - prev_temp
     upcoming_rain = next_rain
 
+
 def on_press():
     global led_start_time
     led_start_time = time.time()
+
 
 def cleanup():
     rled.halt()
@@ -62,14 +65,15 @@ def cleanup():
     bled.halt()
     gpio.cleanup()
 
+
 try:
     gpio.setmode(gpio.BCM)
     rled = LED(RED_PIN)
     gled = LED(GREEN_PIN)
     bled = LED(BLUE_PIN)
-    btn = TriggerButton(BTN_PIN, press_callback = on_press)
+    btn = TriggerButton(BTN_PIN, press_callback=on_press)
 
-    weather_thread = threading.Thread(target = update_forecast)
+    weather_thread = threading.Thread(target=update_forecast)
 
     temp_change = 0
     upcoming_rain = 0
@@ -87,7 +91,7 @@ try:
                 try:
                     weather_thread.start()
                 except RuntimeError:
-                    weather_thread = threading.Thread(target = update_forecast)
+                    weather_thread = threading.Thread(target=update_forecast)
                     weather_thread.start()
 
         # Turn on indicator LED for a fixed amount of time after button press
@@ -131,7 +135,6 @@ try:
 
         sys.stdout.flush()
         time.sleep(1)
-                    
 
     print("PiWeatherBox shutting down normally...")
     cleanup()
