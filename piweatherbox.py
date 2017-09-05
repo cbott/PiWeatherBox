@@ -13,6 +13,7 @@ BLUE_PIN = 21
 BTN_PIN = 26
 
 REFRESH_TIME = 1800  # seconds, time between weather updates
+SECONDS_TO_OBSOLETE_CONDITIONS = 10800  # When weather conditions are unable to update, old ones will  be discarded in this time
 LIGHT_TIME = 300  # how long to keep the LED on after pressing the button
 SHUTDOWN_TIME = 2  # how long to hold the button to trigger a shutdown
 
@@ -26,6 +27,8 @@ def update_forecast():
     global temp_change
     global upcoming_rain
 
+    last_contact = time.time()
+
     wc = weather.conditions()
     if not threading.main_thread().is_alive():
             return
@@ -35,6 +38,12 @@ def update_forecast():
             if not threading.main_thread().is_alive():
                 return
         wc = weather.conditions()
+
+        if time.time() - last_contact > SECONDS_TO_OBSOLETE_CONDITIONS:
+            # If network connection is lost for extended amount of time, indicate by setting parameters to None
+            temp_change = None
+            upcoming_rain = None
+
     print(time.strftime("Acquired weather coditions on %B %d at %H:%M:%S"))
 
     hour = time.localtime()[3]
@@ -75,8 +84,8 @@ try:
 
     weather_thread = threading.Thread(target=update_forecast)
 
-    temp_change = 0
-    upcoming_rain = 0
+    temp_change = None
+    upcoming_rain = None
     last_update_time = 0
     led_start_time = 0
     rain_light_time = 0
@@ -96,26 +105,35 @@ try:
 
         # Turn on indicator LED for a fixed amount of time after button press
         if time.time() - led_start_time < LIGHT_TIME:
-            if upcoming_rain >= RAIN_THRESHOLD and time.time() - rain_light_time > 3:
+            # Read in global variables a single time to avoid threading issues
+            threadsafe_upcoming_rain = upcoming_rain
+            threadsafe_temp_change = temp_change
+
+            if threadsafe_upcoming_rain is None or threadsafe_temp_change is None:
+                # indicate failure to update conditions
+                rled.set(100)
+                gled.off()
+                bled.set(50)
+            elif threadsafe_upcoming_rain >= RAIN_THRESHOLD and time.time() - rain_light_time > 3:
                 # Every 3 seconds, blink yellow if it's going to rain
                 rain_light_time = time.time()
                 rled.set(100)
                 gled.set(50)
                 bled.off()
                 # otherwise just set the LED to indicate temperature
-            elif temp_change >= TEMP_CHANGE_LARGE:
+            elif threadsafe_temp_change >= TEMP_CHANGE_LARGE:
                 rled.fade()
                 gled.off()
                 bled.off()
-            elif temp_change >= TEMP_CHANGE_SMALL:
+            elif threadsafe_temp_change >= TEMP_CHANGE_SMALL:
                 rled.set(100)
                 gled.off()
                 bled.off()
-            elif temp_change > -TEMP_CHANGE_SMALL:
+            elif threadsafe_temp_change > -TEMP_CHANGE_SMALL:
                 rled.off()
                 gled.set(100)
                 bled.off()
-            elif temp_change > -TEMP_CHANGE_LARGE:
+            elif threadsafe_temp_change > -TEMP_CHANGE_LARGE:
                 rled.off()
                 gled.off()
                 bled.set(100)
