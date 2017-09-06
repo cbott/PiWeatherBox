@@ -1,15 +1,16 @@
 import RPi.GPIO as gpio
 import time
 
+
 class TriggerButton:
     """ A button that triggers events when pressed or held for a length of time """
-    def __init__(self, pin, press_callback = lambda:None):
+    def __init__(self, pin, press_callback=lambda: None):
         self.pin = pin
         self.press_callback = press_callback
 
         gpio.setup(self.pin, gpio.IN)
-        gpio.add_event_detect(self.pin, gpio.BOTH, callback = self._on_event, bouncetime = 50)
-        
+        gpio.add_event_detect(self.pin, gpio.BOTH, callback=self._on_event, bouncetime=50)
+
         self._presstime = time.time()
         self._active = False
 
@@ -27,12 +28,10 @@ class TriggerButton:
 
     def _on_event(self, channel):
         if self.get_pressed():
-            #print("Button Pressed")
             self._active = True
             self._presstime = time.time()
             self.press_callback()
         else:
-            #print("Button Released")
             self._active = False
             self._presstime = time.time()
 
@@ -40,7 +39,7 @@ class TriggerButton:
 if __name__ == "__main__":
     BUTTON_PIN = 26
     gpio.setmode(gpio.BCM)
-    
+
     try:
         btn = TriggerButton(BUTTON_PIN)
 
