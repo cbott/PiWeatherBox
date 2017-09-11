@@ -1,5 +1,4 @@
-apikey.txt
-log.txt
+*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
