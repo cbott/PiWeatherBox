@@ -7,6 +7,12 @@ from button import TriggerButton
 from led import LED
 import weather
 
+try:
+    from authenticate import attempt_authentication
+except ImportError:
+    def attempt_authentication():
+        pass
+
 RED_PIN = 16
 GREEN_PIN = 20
 BLUE_PIN = 21
@@ -33,6 +39,7 @@ def update_forecast():
     if not threading.main_thread().is_alive():
             return
     while wc is None:
+        attempt_authentication()  #If network fails, attempt to authenticate before retrying
         for i in range(10):
             time.sleep(1)
             if not threading.main_thread().is_alive():
