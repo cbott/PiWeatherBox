@@ -1,5 +1,6 @@
 import json
 import time
+import urllib
 from urllib.request import urlopen
 
 API_KEY = ""
@@ -8,7 +9,12 @@ with open("apikey.txt", "r") as f:
 
 
 def conditions():
-    """ Returns relevant weather conditions for yesterday, today, and tomorrow """
+    """ Return relevant weather conditions for yesterday, today, and tomorrow
+
+    Return value is a dictionary containing
+    { yesterday_high, today_high, today_rain, today_text, tomorrow_high, tomorrow_rain }
+    or None if an error occurs
+    """
     url_yesterday = 'http://api.wunderground.com/api/%s/geolookup/yesterday/q/MI/Ann_Arbor.json' % API_KEY
     url_forecast = 'http://api.wunderground.com/api/%s/geolookup/forecast/q/MI/Ann_Arbor.json' % API_KEY
 
@@ -28,12 +34,17 @@ def conditions():
         return {'yesterday': {'high': yesterday_high},
                 'today': {'high': today_high, 'rain': today_rain, 'conditions': today_text},
                 'tomorrow': {'high': tomorrow_high, 'rain': tomorrow_rain}}
+    except urllib.error.URLError as e:
+        print(time.strftime("Error contacting Wunderground API on %B %d at %H:%M:%S --"), e)
+    except json.decoder.JSONDecodeError as e:
+        print(time.strftime("Error parsing Wunderground response on %B %d at %H:%M:%S --"), e)
     except Exception as e:
-        print(time.strftime("Error contacting Wunderground API on %B %d at %H:%M:%S -- "), e)
-        return None
+        print(time.strftime("An unknown error occurred while receiving weather data on %B %d at %H:%M:%S --"), e)
+    return None
 
 
 if __name__ == "__main__":
+    # Example usage
     from time import sleep
     c = None
     while c is None:
