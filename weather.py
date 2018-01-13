@@ -36,10 +36,10 @@ def conditions():
                 'tomorrow': {'high': tomorrow_high, 'rain': tomorrow_rain}}
     except urllib.error.URLError as e:
         print(time.strftime("Error contacting Wunderground API on %B %d at %H:%M:%S --"), e)
-    except json.decoder.JSONDecodeError as e:
+    except ValueError as e:  # json.decoder.JSONDecodeError in python 3.5+
         print(time.strftime("Error parsing Wunderground response on %B %d at %H:%M:%S --"), e)
     except Exception as e:
-        print(time.strftime("An unknown error occurred while receiving weather data on %B %d at %H:%M:%S --"), e)
+        print(time.strftime("An unexpected error occurred while receiving weather data on %B %d at %H:%M:%S --"), e)
     return None
 
 
