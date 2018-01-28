@@ -7,3 +7,7 @@ def attempt_authentication():
         requests.post("http://1.1.1.1/login.html", data={"buttonClicked": 4})
     except Exception as e:
         print("Error in authentication script:", e)
+
+
+if __name__ == "__main__":
+    attempt_authentication()

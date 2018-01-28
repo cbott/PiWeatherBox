@@ -3,7 +3,7 @@ import time
 
 
 class TriggerButton:
-    """ A button that triggers events when pressed or held for a length of time """
+    """A button that triggers events when pressed or held for a length of time"""
     def __init__(self, pin, press_callback=lambda: None):
         self.pin = pin
         self.press_callback = press_callback
@@ -14,20 +14,21 @@ class TriggerButton:
         self._presstime = time.time()
         self._active = False
 
-    def get_pressed(self):
-        # Returns whether or not the button is currently pressed
+    def is_pressed(self):
+        """Return whether or not the button is currently pressed, as a boolean"""
         return gpio.input(self.pin)
 
     def get_held(self):
-        # Returns how long the button has been pressed for
-        # Or how long it has been unpressed for (indicated as a negative value)
+        """Return how long the button has been pressed for, in seconds
+        Or how long it has been unpressed for (indicated as a negative value)
+        """
         if self._active:
             return time.time() - self._presstime
         else:
             return self._presstime - time.time()
 
     def _on_event(self, channel):
-        if self.get_pressed():
+        if self.is_pressed():
             self._active = True
             self._presstime = time.time()
             self.press_callback()
@@ -43,10 +44,11 @@ if __name__ == "__main__":
     try:
         btn = TriggerButton(BUTTON_PIN)
 
-        print("Doing Stuff")
+        print("TriggerButton Example")
         while btn.get_held() < 3:
             time.sleep(0.1)
         print("Shutting Down...")
+
     except KeyboardInterrupt:
         print("Keyboard Interrupt. Shutting Down...")
 

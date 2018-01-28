@@ -22,29 +22,31 @@ class LED():
         _t.start()
 
     def halt(self):
-        self._state = "done"
+        """End the LED mainloop permanently"""
+        self._state = "halt"
 
     def off(self):
+
         self.set(0)
 
     def set(self, brightness):
-        """ set the LED to a brightness level 0 to 100 """
+        """Set the LED to a brightness level 0 to 100"""
         self._brightness = brightness
         self._state = "on"
 
     def fade(self, period=1):
-        """ Fade the LED on and off """
+        """Fade the LED on and off"""
         self._period = period
         self._state = "fade"
 
     def blink(self, period=1, brightness=100):
-        """ Blink the LED on and off """
+        """Blink the LED on and off"""
         self._brightness = brightness
         self._period = period
         self._state = "blink"
 
     def _loop(self):
-        while self._state != "done":
+        while self._state != "halt":
             if self._state == "on":
                 self.pwm.ChangeDutyCycle(self._brightness)
                 sleep(self.update_time)
