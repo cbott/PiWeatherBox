@@ -25,6 +25,8 @@ OBSOLESCENCE_TIME = 10800  # Seconds to keep old weather data if unable to updat
 LIGHT_TIME = 300           # Seconds to keep the LED on after pressing the button
 SHUTDOWN_TIME = 2          # Seconds to hold the button to trigger a shutdown
 LOOP_DELAY = 0.1           # Seconds to sleep between each run of the main loop
+RAIN_LIGHT_FREQ = 3        # Seconds to wait between flashes of the rain indicator
+RAIN_LIGHT_DURRATION = 1   # Seconds to keep rain indicator on each flash
 
 # Prior to mid-day, weatherbox will indicate the forecast conditions for today
 # After mid-day, weatherbox will indicate forecast conditions for tomorrow
@@ -93,6 +95,10 @@ def cleanup():
 
 
 def mainloop():
+    global led_start_time
+    global temp_change
+    global upcoming_rain
+
     weather_thread = threading.Thread(target=update_forecast)
 
     temp_change = None
@@ -123,9 +129,8 @@ def mainloop():
                 rled.set(100)
                 gled.off()
                 bled.set(50)
-            elif threadsafe_upcoming_rain >= RAIN_THRESHOLD and time.time() - rain_light_time > 3:
+            elif threadsafe_upcoming_rain >= RAIN_THRESHOLD and (time.time() - rain_light_time) < RAIN_LIGHT_DURRATION:
                 # Every 3 seconds, blink yellow if it's going to rain
-                rain_light_time = time.time()
                 rled.set(100)
                 gled.set(50)
                 bled.off()
@@ -155,6 +160,11 @@ def mainloop():
                 rled.off()
                 gled.off()
                 bled.fade()
+
+            if time.time() - rain_light_time > RAIN_LIGHT_FREQ:
+                # Reset timer tracking when to light up rain indicator
+                rain_light_time = time.time()
+
         else:
             rled.off()
             gled.off()
