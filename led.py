@@ -70,7 +70,7 @@ class LED():
 
 
 if __name__ == "__main__":
-    PIN = 13
+    PIN = 16
     gpio.setmode(gpio.BCM)
     try:
         blue = LED(PIN)

@@ -61,7 +61,7 @@ def update_forecast():
             temp_change = None
             upcoming_rain = None
 
-    print(time.strftime("Acquired weather coditions on %B %d at %H:%M:%S"))
+    print(time.strftime("Acquired weather conditions on %B %d at %H:%M:%S"))
 
     hour = time.localtime()[3]
     if hour > MID_DAY:
