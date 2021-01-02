@@ -35,7 +35,7 @@ MID_DAY = 14  # Hours (24 hr clock)
 # LED color-change thresholds:
 LARGE_TEMP_CHANGE = 7  # deg F
 SMALL_TEMP_CHANGE = 3  # deg F
-RAIN_THRESHOLD = 0.1   # inches (QPF)
+RAIN_THRESHOLD = 0.04  # inches (QPF)
 
 
 def update_forecast():
@@ -44,17 +44,22 @@ def update_forecast():
 
     last_contact = time.time()
 
+    print("Retrieving conditions")
     wc = weather.conditions()
+    print("Parsing conditions")
     if not threading.main_thread().is_alive():
             return
     while wc is None:
+        print("Failed to retrieve conditions")
         attempt_authentication()  # If network fails, attempt to authenticate before retrying
         for i in range(15):
             # Wait for 15 seconds before next attempt, but shut down if main program has ended
             time.sleep(1)
             if not threading.main_thread().is_alive():
                 return
+        print("Retrying")
         wc = weather.conditions()
+        print("Parsing conditions")
 
         if time.time() - last_contact > OBSOLESCENCE_TIME:
             # If network connection is lost for extended amount of time, indicate by setting parameters to None
@@ -110,11 +115,15 @@ def mainloop():
     while True:
         # Periodically update forecast asynchronously
         if time.time() - last_update_time > REFRESH_TIME:
+            print("Calling forecast updater")
             if not weather_thread.is_alive():
+                print("Updater thread not alive")
                 last_update_time = time.time()
                 try:
+                    print("Starting thread")
                     weather_thread.start()
                 except RuntimeError:
+                    print("Restarting thread")
                     weather_thread = threading.Thread(target=update_forecast)
                     weather_thread.start()
 

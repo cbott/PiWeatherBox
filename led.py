@@ -26,7 +26,6 @@ class LED():
         self._state = "halt"
 
     def off(self):
-
         self.set(0)
 
     def set(self, brightness):
@@ -70,7 +69,7 @@ class LED():
 
 
 if __name__ == "__main__":
-    PIN = 16
+    PIN = 21
     gpio.setmode(gpio.BCM)
     try:
         blue = LED(PIN)
@@ -87,4 +86,5 @@ if __name__ == "__main__":
 
     finally:
         print("Cleaning up")
+        blue.halt()
         gpio.cleanup()
