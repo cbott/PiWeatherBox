@@ -2,7 +2,7 @@ import requests
 import time
 
 API_KEY = ""
-with open("apikey.txt", "r") as f:
+with open("api/apikey.txt", "r") as f:
     API_KEY = f.readline().strip()
 
 

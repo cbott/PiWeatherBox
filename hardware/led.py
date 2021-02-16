@@ -1,6 +1,21 @@
 import RPi.GPIO as gpio
+from collections import namedtuple
 from threading import Thread
 from time import sleep
+
+Color = namedtuple('Color', ['Red', 'Green', 'Blue'])
+
+class RGBLED():
+    # TODO: Write this?
+    def __init__(self, r_pin, g_pin, b_pin):
+        self.pin = pin
+        gpio.setup(self.pin, gpio.OUT)
+        gpio.output(self.pin, gpio.LOW)
+        self.pwm = gpio.PWM(self.pin, 75)  # pin, freq (Hz)
+        self.pwm.start(0)
+
+    def set(self, color: Color):
+        ...
 
 
 class LED():
