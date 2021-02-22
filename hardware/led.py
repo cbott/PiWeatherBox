@@ -14,6 +14,7 @@ def intensity_to_duty_cycle(intensity: int) -> int:
 
 
 class RGBLED():
+    # TODO: docstring and add type annotations
     def __init__(self, r_pin, g_pin, b_pin):
         # Initialize hardware
         # TODO: is there a cleaner way to do this with Tuples or maybe have named parameters?
@@ -163,6 +164,7 @@ class LED():
 
 
 if __name__ == "__main__":
+    # TODO: Update to use RGBLED and delete LED
     PIN = 21
     gpio.setmode(gpio.BCM)
     try:

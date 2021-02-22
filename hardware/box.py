@@ -71,7 +71,6 @@ class PiBox(ABC):
 
     def _api_call_wrapper(self):
         """ Runs the actual API call repeatedly without blocking the main thread """
-        self._running = True
         while self._running:
             if time.time() - self.last_update_time > self.refresh_time_s:
                 try:
@@ -108,6 +107,8 @@ class PiBox(ABC):
 
                 sys.stdout.flush()
                 time.sleep(self.loop_delay_s)
+
+            logging.info('PiBox mainloop exited')
 
         finally:
             self._cleanup()

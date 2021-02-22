@@ -42,10 +42,6 @@ class BoxWindow(tk.Frame):
         self.button_callback = new_callback
 
 
-def my_thing(box: BoxWindow):
-    box.set_random_color()
-
-
 class FakeRGBLED():
     def __init__(self, box_reference: BoxWindow, r_pin: int, g_pin: int, b_pin: int):
         print(f'Creating Fake RGB LED referenced to window {box_reference}')
@@ -53,8 +49,7 @@ class FakeRGBLED():
         self.box_reference.status_text['text'] = 'on'
 
     def halt(self):
-        pass
-        # self.box_reference.status_text['text'] = 'off'
+        self.box_reference.status_text['text'] = 'off'
 
     def off(self):
         self.set(Color(0, 0, 0))
@@ -70,9 +65,3 @@ class FakeRGBLED():
     def blink(self, color: Color, period=1):
         self.box_reference.status_text['text'] = 'blink'
         self.box_reference.set_led_color(color)
-
-
-if __name__ == '__main__':
-    box = BoxWindow(button_callback=lambda : False)
-    box.set_callback(lambda : my_thing(box))
-    box.mainloop()
