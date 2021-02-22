@@ -1,13 +1,15 @@
-# TODO: Sort these imports please
-import RPi.GPIO as gpio
-from abc import ABC, abstractmethod
-import time
-from typing import Any, Callable
 import logging
-from hardware.button import TriggerButton
-from hardware.led import LED
-import threading
 import sys
+import threading
+import time
+
+from abc import ABC, abstractmethod
+from typing import Any, Callable
+
+import RPi.GPIO as gpio
+
+from hardware.button import TriggerButton
+from hardware.led import *
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
@@ -24,9 +26,7 @@ class PiBox(ABC):
     def __init__(self):
         # Initialize hardware
         gpio.setmode(gpio.BCM)
-        self.rled = LED(PiBox.RED_PIN)
-        self.gled = LED(PiBox.GREEN_PIN)
-        self.bled = LED(PiBox.BLUE_PIN)
+        self.led = RGBLED(PiBox.RED_PIN, PiBox.GREEN_PIN, PiBox.BLUE_PIN)
         self.btn = TriggerButton(PiBox.BTN_PIN, press_callback=self._on_press)
 
         # Initialize internal state
@@ -45,6 +45,8 @@ class PiBox(ABC):
     @abstractmethod
     def api_call(self) -> Any:
         """
+        Called repeatedly with a period of refresh_time_s
+
         Override this method to implement application-specific behavior
         Returns a value that will be passed to `led_control()` as the `data` parameter
         """
@@ -53,15 +55,22 @@ class PiBox(ABC):
     @abstractmethod
     def led_control(self, data: Any):
         """
+        Called repeatedly with a period of loop_delay_s whenever the LED should be active
+
         Override this method to implement application-specific behavior
-        Make use of self.rled,gled,bled
+        Make use of self.led
         """
         ...
 
-    def _nonblocking_api_call(self):
-        """ Runs the actual API call repeatedly without blocking the main thread
-            TODO: Rename
+    def led_stale(self):
         """
+        Indicate stale data/inability to update
+        Optionally override in subclass for application-specific behavior
+        """
+        self.led.set(Color(255, 0, 128))
+
+    def _api_call_wrapper(self):
+        """ Runs the actual API call repeatedly without blocking the main thread """
         self._running = True
         while self._running:
             if time.time() - self.last_update_time > self.refresh_time_s:
@@ -75,26 +84,23 @@ class PiBox(ABC):
                     logging.error(f'Received exception {e} while running API call. Restarting.')
 
     def mainloop(self):
+        self._running = True  # Allows for killing mainloop if running in thread
+
         try:
             logging.info('Starting PiBox Mainloop')
-            api_thread = threading.Thread(target=self._nonblocking_api_call)
+            api_thread = threading.Thread(target=self._api_call_wrapper)
             api_thread.start()
 
-            while True:
+            while self._running:
                 # Turn on indicator LED for a fixed amount of time after button press
                 if time.time() - self.last_press_time < self.led_on_time_s:
                     if time.time() - self.last_update_time > self.obsolescence_time_s:
                         # Failure to update conditions: Solid purple
-                        # TODO: Maybe make this a method call to allow custom behavior for subclasses?
-                        self.rled.set(100)
-                        self.gled.off()
-                        self.bled.set(50)
+                        self.led_stale()
                     else:
                         self.led_control(self.api_call_result)
                 else:
-                    self.rled.off()
-                    self.gled.off()
-                    self.bled.off()
+                    self.led.off()
 
                 # Shutdown when button is held
                 if self.btn.is_pressed() and (self.btn.get_held() > self.shutdown_time_s):
@@ -103,9 +109,8 @@ class PiBox(ABC):
                 sys.stdout.flush()
                 time.sleep(self.loop_delay_s)
 
-        except (Exception, KeyboardInterrupt):
+        finally:
             self._cleanup()
-            raise
 
     def _on_press(self):
         """ Callback function for button press """
@@ -114,9 +119,7 @@ class PiBox(ABC):
 
     def _cleanup(self):
         self._running = False  # End the API call thread
-        self.rled.halt()
-        self.gled.halt()
-        self.bled.halt()
+        self.led.halt()
         gpio.cleanup()
         logging.debug('Ran Cleanup')
 

@@ -3,29 +3,10 @@ from unittest.mock import Mock, patch
 sys.modules['RPi'] = Mock()
 sys.modules['RPi.GPIO'] = Mock()
 
-from hardware.box import PiBox
-from hardware.led import LED
-
 from apps.piweatherbox import WeatherBox
-
-class FakeLED():
-    def __init__(self, pin):
-        print('Creating Fake LED')
-
-    def halt(self):
-        pass
-
-    def off(self):
-        self.set(0)
-
-    def set(self, brightness):
-        print(f'Set {brightness}')
-
-    def fade(self, period=1):
-        print(f'Fade {period}')
-
-    def blink(self, period=1, brightness=100):
-        print(f'Blink {period}, {brightness}')
+from hardware.box import PiBox
+from tests.box_sim import *
+import threading
 
 
 class TestBox(PiBox):
@@ -48,7 +29,8 @@ class TestBox(PiBox):
             self.bled.set(0)
 
 
-def test():
+@patch('hardware.box.LED', FakeLED)
+def test_basic():
     box = TestBox()
     box._on_press()
     box.mainloop()
@@ -58,5 +40,27 @@ def test_weatherbox():
     box._on_press()
     box.mainloop()
 
+def test_thread():
+    # Create real box
+
+    fake_box = BoxWindow(button_callback=lambda : True)
+
+    def gen(*args):
+        return FakeRGBLED(fake_box, *args)
+
+    with patch('hardware.box.RGBLED', gen):
+        box = WeatherBox()
+        fake_box.set_callback(box._on_press)
+
+        # Run real box in thread
+        logic_thread = threading.Thread(target=box.mainloop)
+        logic_thread.start()
+
+        # Run fake box as main process, piping commands to real box
+        fake_box.mainloop()
+
+        # Kill real box thread
+        box._running = False
+
 if __name__ == '__main__':
-    test_weatherbox()
+    test_thread()

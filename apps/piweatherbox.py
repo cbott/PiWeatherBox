@@ -50,7 +50,6 @@ class WeatherBox(PiBox):
         return {'temp_change': temp_change, 'upcoming_rain': upcoming_rain}
 
     def led_control(self, data):
-        logging.debug(f'LED Control: {data}')
         upcoming_rain = data['upcoming_rain']
         temp_change = data['temp_change']
         if upcoming_rain >= RAIN_THRESHOLD and (time.time() - self.rain_light_time) < RAIN_LIGHT_DURRATION:
