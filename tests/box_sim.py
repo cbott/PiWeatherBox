@@ -47,13 +47,14 @@ def my_thing(box: BoxWindow):
 
 
 class FakeRGBLED():
-    def __init__(self, box_reference: BoxWindow, pin: int):
+    def __init__(self, box_reference: BoxWindow, r_pin: int, g_pin: int, b_pin: int):
         print(f'Creating Fake RGB LED referenced to window {box_reference}')
         self.box_reference = box_reference  # TODO: rename
         self.box_reference.status_text['text'] = 'on'
 
     def halt(self):
-        self.box_reference.status_text['text'] = 'off'
+        pass
+        # self.box_reference.status_text['text'] = 'off'
 
     def off(self):
         self.set(Color(0, 0, 0))

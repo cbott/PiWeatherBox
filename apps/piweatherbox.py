@@ -2,6 +2,7 @@ import logging
 import time
 from api import weather
 from hardware.box import PiBox
+from hardware.led import Color
 
 # Prior to mid-day, weatherbox will indicate the forecast conditions for today
 # After mid-day, weatherbox will indicate forecast conditions for tomorrow
@@ -54,35 +55,23 @@ class WeatherBox(PiBox):
         temp_change = data['temp_change']
         if upcoming_rain >= RAIN_THRESHOLD and (time.time() - self.rain_light_time) < RAIN_LIGHT_DURRATION:
             # Every 3 seconds, blink yellow if it's going to rain
-            self.rled.set(100)
-            self.gled.set(50)
-            self.bled.off()
+            self.led.set(Color(255, 128, 0))
             # otherwise just set the LED to indicate temperature
         elif temp_change >= LARGE_TEMP_CHANGE:
             # Much warmer: Fade red
-            self.rled.fade()
-            self.gled.off()
-            self.bled.off()
+            self.led.fade(Color(255, 0, 0))
         elif temp_change >= SMALL_TEMP_CHANGE:
             # Warmer: Solid red
-            self.rled.set(100)
-            self.gled.off()
-            self.bled.off()
+            self.led.set(Color(255, 0, 0))
         elif temp_change > -SMALL_TEMP_CHANGE:
             # About the same: Solid green
-            self.rled.off()
-            self.gled.set(100)
-            self.bled.off()
+            self.led.set(Color(0, 255, 0))
         elif temp_change > -LARGE_TEMP_CHANGE:
             # Colder: Solid blue
-            self.rled.off()
-            self.gled.off()
-            self.bled.set(100)
+            self.led.set(Color(0, 0, 255))
         else:
             # Much colder: Fade blue
-            self.rled.off()
-            self.gled.off()
-            self.bled.fade()
+            self.led.fade(Color(0, 0, 255))
 
         if time.time() - self.rain_light_time > RAIN_LIGHT_FREQ:
             # Reset timer tracking when to light up rain indicator

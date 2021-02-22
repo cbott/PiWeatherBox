@@ -9,36 +9,36 @@ from tests.box_sim import *
 import threading
 
 
-class TestBox(PiBox):
-    def __init__(self):
-        super().__init__()
-        self.refresh_time_s = 20
+# class TestBox(PiBox):
+#     def __init__(self):
+#         super().__init__()
+#         self.refresh_time_s = 20
 
-    def api_call(self):
-        return 1
+#     def api_call(self):
+#         return 1
 
-    def led_control(self, data):
-        print(f'LED Control: {data}')
-        if data:
-            self.rled.set(100)
-            self.gled.set(0)
-            self.bled.set(0)
-        else:
-            self.rled.set(0)
-            self.gled.set(100)
-            self.bled.set(0)
+#     def led_control(self, data):
+#         print(f'LED Control: {data}')
+#         if data:
+#             self.rled.set(100)
+#             self.gled.set(0)
+#             self.bled.set(0)
+#         else:
+#             self.rled.set(0)
+#             self.gled.set(100)
+#             self.bled.set(0)
 
 
-@patch('hardware.box.LED', FakeLED)
-def test_basic():
-    box = TestBox()
-    box._on_press()
-    box.mainloop()
+# @patch('hardware.box.LED', FakeLED)
+# def test_basic():
+#     box = TestBox()
+#     box._on_press()
+#     box.mainloop()
 
-def test_weatherbox():
-    box = WeatherBox()
-    box._on_press()
-    box.mainloop()
+# def test_weatherbox():
+#     box = WeatherBox()
+#     box._on_press()
+#     box.mainloop()
 
 def test_thread():
     # Create real box
