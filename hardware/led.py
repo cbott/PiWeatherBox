@@ -3,6 +3,7 @@ import RPi.GPIO as gpio
 from collections import namedtuple
 from threading import Thread
 from time import sleep
+from typing import Iterable
 
 # TODO: should we just make these 0-100 instead of 0-255?
 Color = namedtuple('Color', ['Red', 'Green', 'Blue'])
@@ -29,11 +30,8 @@ class RGBLED():
             self.pwm_channels.append(pwm)
 
         # Initialize current state
-        self._state = "on"
-        self._color = 0
-        self.fade_min = 0
-        self.fade_max = 100
-        self.fade_step = 5
+        self._state = 'on'  # TODO: Enum this maybe?
+        self._color = Color(0, 0, 0)
         # TODO: update time is misleading cuz it is only for const color mode not fade and such
         self.update_time = 0.01  # seconds, time that update loop takes
 
@@ -64,34 +62,36 @@ class RGBLED():
         self._period = period
         self._state = "blink"
 
+    def _write_all_pwm_channels(self, color: Iterable) -> None:
+        """ Helper function to write the R, G, and B PWM channels for the LED given a Color tuple or other length 3 iterable """
+        assert len(color) == 3
+        for i in range(3):
+            self.pwm_channels[i].ChangeDutyCycle(intensity_to_duty_cycle(color[i]))
+
     def _loop(self):
-        while self._state != "halt":
+        while self._state != 'halt':
             # TODO: make this more threadsafe
-            if self._state == "on":
-                # TODO: ok yeah this enumerate is kind of gross, need named channels list
-                for i, component in enumerate(self._color):
-                    self.pwm_channels[i].ChangeDutyCycle(intensity_to_duty_cycle(component))
+            if self._state == 'on':
+                self._write_all_pwm_channels(self._color)
                 sleep(self.update_time)
 
-            if self._state == "fade":
+            if self._state == 'fade':
                 pause = 0.01  # TODO: make const
-                num_steps = self._period // pause
-                # TODO: this is some pro hacker moves but also has probably 3 off-by-one errors
-                # TODO: could we maybe make it steps[step][component] to make the following loop nicer?
-                steps = [np.concatenate((np.linspace(0,component,num_steps//2), np.linspace(component,0,num_steps//2))) for component in self._color]
-                for step in range(steps):
-                    for component in range(3):
-                        self.pwm_channels[component].ChangeDutyCycle(intensity_to_duty_cycle(steps[component][step]))
+                num_steps = int(self._period / pause / 2)  # number of steps before reversing direction
+                # TODO: this is some SUPER pro hacker moves but also has probably 3 off-by-one errors
+                # Create a 2D array of values, with a column for each color component and a row for each step of the fade
+                up_steps = np.linspace((0, 0, 0), self._color, num_steps)
+                steps = np.concatenate((up_steps, up_steps[::-1]))
+                for step in steps:
+                    self._write_all_pwm_channels(step)
                     sleep(pause)
 
-            if self._state == "blink":
+            if self._state == 'blink':
                 # Turn on
-                for i, component in enumerate(self._color):
-                    self.pwm_channels[i].ChangeDutyCycle(intensity_to_duty_cycle(component))
+                self._write_all_pwm_channels(self._color)
                 sleep(self._period / 2.0)
                 # Turn off
-                for channel in self.pwm_channels:
-                    channel.ChangeDutyCycle(0)
+                self._write_all_pwm_channels((0, 0, 0))
                 sleep(self._period / 2.0)
 
         for channel in self.pwm_channels:

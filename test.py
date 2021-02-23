@@ -21,17 +21,19 @@ class TestBox(PiBox):
         self.led_on_time_s = 10
 
     def api_call(self):
-        return random.randint(1,10)
+        return 1
 
     def led_control(self, data):
-        if data < 5:
+        if data == 1:
             self.led.fade(Color(0, 255, 0))
+        elif data == 2:
+            self.led.blink(Color(0, 128, 255))
         else:
-            self.led.set(Color(0, 128, 255))
+            self.led.set(Color(128, 128, 255))
 
 
 def test_thread():
-
+    """ Runs Box hardware class in thread, along with box simulator GUI """
     fake_box = BoxWindow(button_callback=lambda : True)
 
     def gen(*args):
