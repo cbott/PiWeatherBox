@@ -11,7 +11,7 @@ echo "=====================================" >>  $LOGFILE
 while [ $exitcode -ne 0 ]
 do
 echo -e "\n[`date`] Starting Python Script" >> $LOGFILE
-python3 piweatherbox.py &>> $LOGFILE
+python3 main.py &>> $LOGFILE
 exitcode=$?
 echo "[`date`] Python Script Exited With Code $exitcode" >> $LOGFILE
 

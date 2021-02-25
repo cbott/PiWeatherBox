@@ -76,9 +76,3 @@ class WeatherBox(PiBox):
         if time.time() - self.rain_light_time > RAIN_LIGHT_FREQ:
             # Reset timer tracking when to light up rain indicator
             self.rain_light_time = time.time()
-
-
-if __name__ == "__main__":
-    print("Starting PiWeatherBox Mainloop...")
-    weatherbox = WeatherBox()
-    weatherbox.mainloop()
