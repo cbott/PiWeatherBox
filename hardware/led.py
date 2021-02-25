@@ -105,37 +105,21 @@ if __name__ == "__main__":
     BLUE_PIN = 21
     gpio.setmode(gpio.BCM)
 
-    red = Color(255, 0, 0)
-    green = Color(0, 255, 0)
-    blue = Color(0, 0, 255)
-    yellow = Color(0, 255, 128)
     try:
         led = RGBLED(RED_PIN, GREEN_PIN, BLUE_PIN)
+
+        colors = [Color(255, 0, 0),
+                Color(0, 255, 0),
+                Color(0, 0, 255),
+                Color(255, 128, 0)]
+        modes = [led.set, led.fade, led.blink]
+
         while 1:
-            led.set(red)
-            sleep(3)
-            led.set(green)
-            sleep(3)
-            led.set(blue)
-            sleep(3)
-            led.set(yellow)
-            sleep(3)
-            led.fade(red)
-            sleep(3)
-            led.fade(green)
-            sleep(3)
-            led.fade(blue)
-            sleep(3)
-            led.fade(yellow)
-            sleep(3)
-            led.blink(red)
-            sleep(3)
-            led.blink(green)
-            sleep(3)
-            led.blink(blue)
-            sleep(3)
-            led.blink(yellow)
-            sleep(3)
+            for mode in modes:
+                for color in colors:
+                    mode(color)
+                    sleep(3)
+
     finally:
         print("Cleaning up")
         led.halt()
