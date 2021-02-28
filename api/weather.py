@@ -1,10 +1,16 @@
 import requests
 import time
 
-API_KEY = ""
-with open("api/apikey.txt", "r") as f:
-    API_KEY = f.readline().strip()
+CONFIG_FILE = "weather_config.txt"
 
+# Load config file
+with open(CONFIG_FILE, "r") as f:
+    contents = f.readlines()
+    if len(contents) != 3:
+        raise ValueError("Config file requires 3 lines: api key, latitude, longitude")
+    API_KEY = contents[0].strip()
+    LAT = contents[1].strip()
+    LON = contents[2].strip()
 
 ONE_DAY = 60 * 60 * 24  # Seconds in a day
 
@@ -15,8 +21,6 @@ def conditions():
     { yesterday_high, today_high, today_rain, today_text, tomorrow_high, tomorrow_rain }
     or None if an error occurs
     """
-    lat = 42.262151
-    lon = -83.706412
     exc = "currently,minutely,hourly,alerts"
 
     url_yesterday = "https://api.darksky.net/forecast/{apikey}/{latitude},{longitude},{time}?exclude={exclude}"
@@ -24,13 +28,13 @@ def conditions():
 
     try:
         yesterday_time = int(time.time() - ONE_DAY)  # UNIX timestamp of some point during yesterday
-        yesterday_resp = requests.get(url_yesterday.format(apikey=API_KEY, latitude=lat, longitude=lon, time=yesterday_time, exclude=exc))
+        yesterday_resp = requests.get(url_yesterday.format(apikey=API_KEY, latitude=LAT, longitude=LON, time=yesterday_time, exclude=exc))
         if yesterday_resp.status_code != 200:
             print(time.strftime("Invalid response status <{}> getting info for yesterday on %B %d at %H:%M:%S --".format(yesterday_resp.status_code)))
             return None
         yesterday = yesterday_resp.json()
 
-        forecast_resp = requests.get(url_forecast.format(apikey=API_KEY, latitude=lat, longitude=lon, exclude=exc))
+        forecast_resp = requests.get(url_forecast.format(apikey=API_KEY, latitude=LAT, longitude=LON, exclude=exc))
         if forecast_resp.status_code != 200:
             print(time.strftime("Invalid response status <{}> getting forecast on %B %d at %H:%M:%S --".format(forecast_resp.status_code)))
             return None
