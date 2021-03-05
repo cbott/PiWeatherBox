@@ -1,18 +1,22 @@
+import logging
 import requests
 import time
+import os
 
-CONFIG_FILE = "weather_config.txt"
+CONFIG_FILE = 'weather_config.txt'
 
 # Load config file
-with open(CONFIG_FILE, "r") as f:
+config_path = os.path.join(os.path.dirname(__file__), CONFIG_FILE)
+with open(config_path, 'r') as f:
     contents = f.readlines()
     if len(contents) != 3:
-        raise ValueError("Config file requires 3 lines: api key, latitude, longitude")
+        raise ValueError('Config file requires 3 lines: api key, latitude, longitude')
     API_KEY = contents[0].strip()
     LAT = contents[1].strip()
     LON = contents[2].strip()
 
 ONE_DAY = 60 * 60 * 24  # Seconds in a day
+
 
 def conditions():
     """ Return relevant weather conditions for yesterday, today, and tomorrow
@@ -21,49 +25,50 @@ def conditions():
     { yesterday_high, today_high, today_rain, today_text, tomorrow_high, tomorrow_rain }
     or None if an error occurs
     """
-    exc = "currently,minutely,hourly,alerts"
+    exc = 'currently,minutely,hourly,alerts'
 
-    url_yesterday = "https://api.darksky.net/forecast/{apikey}/{latitude},{longitude},{time}?exclude={exclude}"
-    url_forecast = "https://api.darksky.net/forecast/{apikey}/{latitude},{longitude}?exclude={exclude}"
+    url_yesterday = 'https://api.darksky.net/forecast/{apikey}/{latitude},{longitude},{time}?exclude={exclude}'
+    url_forecast = 'https://api.darksky.net/forecast/{apikey}/{latitude},{longitude}?exclude={exclude}'
 
     try:
         yesterday_time = int(time.time() - ONE_DAY)  # UNIX timestamp of some point during yesterday
-        yesterday_resp = requests.get(url_yesterday.format(apikey=API_KEY, latitude=LAT, longitude=LON, time=yesterday_time, exclude=exc))
-        if yesterday_resp.status_code != 200:
-            print(time.strftime("Invalid response status <{}> getting info for yesterday on %B %d at %H:%M:%S --".format(yesterday_resp.status_code)))
-            return None
-        yesterday = yesterday_resp.json()
 
-        forecast_resp = requests.get(url_forecast.format(apikey=API_KEY, latitude=LAT, longitude=LON, exclude=exc))
-        if forecast_resp.status_code != 200:
-            print(time.strftime("Invalid response status <{}> getting forecast on %B %d at %H:%M:%S --".format(forecast_resp.status_code)))
-            return None
-        forecast = forecast_resp.json()
+        urls = {'yesterday': url_yesterday.format(apikey=API_KEY, latitude=LAT, longitude=LON, time=yesterday_time, exclude=exc),
+                'forecast': url_forecast.format(apikey=API_KEY, latitude=LAT, longitude=LON, exclude=exc)}
+        responses = []
+        for url in urls:
+            resp = requests.get(urls[url])
+            if resp.status_code != 200:
+                logging.error(f'Invalid response status <{resp.status_code}> getting weather {url}')
+                return None
+            responses.append(resp.json())
+        yesterday = responses[0]
+        forecast = responses[1]
 
-        yesterday_high = float(yesterday["daily"]["data"][0]["temperatureHigh"])
+        yesterday_high = float(yesterday['daily']['data'][0]['temperatureHigh'])
 
-        today_high = float(forecast["daily"]["data"][0]["temperatureHigh"])
-        today_rain = float(forecast["daily"]["data"][0].get("precipIntensityMax", -1))  # inches of liquid water per hour
-        today_text = forecast["daily"]["data"][0].get("summary", "")
+        today_high = float(forecast['daily']['data'][0]['temperatureHigh'])
+        today_rain = float(forecast['daily']['data'][0].get('precipIntensityMax', -1))  # inches of liquid water per hour
+        today_text = forecast['daily']['data'][0].get('summary', '')
 
-        tomorrow_high = float(forecast["daily"]["data"][1]["temperatureHigh"])
-        tomorrow_rain = float(forecast["daily"]["data"][1].get("precipIntensityMax", -1))
+        tomorrow_high = float(forecast['daily']['data'][1]['temperatureHigh'])
+        tomorrow_rain = float(forecast['daily']['data'][1].get('precipIntensityMax', -1))
 
         return {'yesterday': {'high': yesterday_high},
                 'today': {'high': today_high, 'rain': today_rain, 'conditions': today_text},
                 'tomorrow': {'high': tomorrow_high, 'rain': tomorrow_rain}}
     except ValueError as e:  # json.decoder.JSONDecodeError in python 3.5+
-        print(time.strftime("Error parsing API response on %B %d at %H:%M:%S --"), e)
+        logging.error(f'Error parsing API response: {e}')
     except Exception as e:
-        print(time.strftime("An unexpected error occurred while receiving weather data on %B %d at %H:%M:%S --"), e)
+        logging.error(f'An unexpected error occurred while receiving weather data: {e}')
     return None
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Example usage
     from time import sleep
 
-    print("Grabbing data...")
+    print('Grabbing data...')
     while True:
         c = conditions()
         if c:

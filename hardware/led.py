@@ -8,6 +8,7 @@ from typing import Iterable
 # TODO: should we just make these 0-100 instead of 0-255?
 Color = namedtuple('Color', ['Red', 'Green', 'Blue'])
 
+
 def intensity_to_duty_cycle(intensity: int) -> int:
     """ Converts a 0-255 color intensity to a 0-100 duty cycle """
     return int(intensity * 100 / 255)
@@ -109,9 +110,9 @@ if __name__ == "__main__":
         led = RGBLED(RED_PIN, GREEN_PIN, BLUE_PIN)
 
         colors = [Color(255, 0, 0),
-                Color(0, 255, 0),
-                Color(0, 0, 255),
-                Color(255, 128, 0)]
+                  Color(0, 255, 0),
+                  Color(0, 0, 255),
+                  Color(255, 128, 0)]
         modes = [led.set, led.fade, led.blink]
 
         while 1:

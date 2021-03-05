@@ -11,9 +11,6 @@ import RPi.GPIO as gpio
 from hardware.button import TriggerButton
 from hardware.led import *
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
-                    datefmt='%B %d, %Y %H:%M:%S')
 
 class PiBox(ABC):
     """ Base class to handle hardware and control flow for any PiBox application """
@@ -41,14 +38,16 @@ class PiBox(ABC):
         self.loop_delay_s = 0.1  # Seconds to sleep between each run of the main loop
         self.shutdown_time_s = 2  # Seconds to hold the button to trigger a shutdown
         self.obsolescence_time_s = 10800  # Seconds to keep old data if unable to update
+        self.api_retry_delay_s = 15  # Seconds to wait before calling API again after failure
 
     @abstractmethod
     def api_call(self) -> Any:
         """
         Called repeatedly with a period of refresh_time_s
-
         Override this method to implement application-specific behavior
+
         Returns a value that will be passed to `led_control()` as the `data` parameter
+        Raises any exception to indicate failure, after which method will be called again after self.api_retry_delay_s
         """
         ...
 
@@ -56,9 +55,11 @@ class PiBox(ABC):
     def led_control(self, data: Any):
         """
         Called repeatedly with a period of loop_delay_s whenever the LED should be active
-
         Override this method to implement application-specific behavior
-        Make use of self.led
+
+        Variables:
+            data - Value returned by `api_call()`
+            self.led - RGBLED object to command
         """
         ...
 
@@ -81,6 +82,8 @@ class PiBox(ABC):
                     logging.info(f'API call returned {self.api_call_result}')
                 except Exception as e:
                     logging.error(f'Received exception {e} while running API call. Restarting.')
+                    # Delay next call for api_retry_delay_s
+                    self.last_update_time = time.time() - self.refresh_time_s + self.api_retry_delay_s
 
     def mainloop(self):
         self._running = True  # Allows for killing mainloop if running in thread

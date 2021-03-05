@@ -6,6 +6,7 @@ import random
 from hardware.box import PiBox
 from hardware.led import Color
 
+
 class TestBox(PiBox):
     """ Bare minimum PiBox implementation to show functionality """
     def __init__(self):
@@ -14,7 +15,7 @@ class TestBox(PiBox):
         self.led_on_time_s = 10
 
     def api_call(self):
-        return random.randint(1,3)
+        return random.randint(1, 3)
 
     def led_control(self, data):
         if data == 1:
