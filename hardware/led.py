@@ -1,3 +1,4 @@
+# led.py
 import numpy as np
 import RPi.GPIO as gpio
 
@@ -10,9 +11,9 @@ from typing import Iterable
 Color = namedtuple('Color', ['Red', 'Green', 'Blue'])
 
 
-def intensity_to_duty_cycle(intensity: int) -> int:
+def intensity_to_duty_cycle(intensity: float) -> float:
     """ Converts a 0-255 color intensity to a 0-100 duty cycle """
-    return int(intensity * 100 / 255)  # TODO: does this need to actually cast to int?
+    return intensity * 100.0 / 255.0
 
 
 class RGBLED():
@@ -69,50 +70,52 @@ class RGBLED():
         self._period = period
         self._state = self.State.BLINK
 
-    def _write_pwm_channel(self, channel: gpio.PWM, duty_cycle: int):
+    def _write_pwm_channel(self, channel: gpio.PWM, duty_cycle: float):
         """ Helper function to set duty cycle of a PWM channel, with bounds checking """
         if duty_cycle < 0 or duty_cycle > 100:
             raise ValueError(f'Duty cycle {duty_cycle} does not not fall in the range [0, 100]')
         channel.ChangeDutyCycle(duty_cycle)
 
-    def _write_color(self, color: Iterable) -> None:
+    def _write_color(self, color: Iterable[float]) -> None:
         """ Helper function to write the R, G, and B PWM channels for the LED given a Color tuple or other length 3 iterable """
         assert len(color) == 3
         for i in range(3):
             self._write_pwm_channel(self.pwm_channels[i], intensity_to_duty_cycle(color[i]))
 
     def _loop(self):
+        """ LED mainloop, executed in thread """
         # TODO: restructure to avoid long sleep times
-        while self._state is not self.State.HALT:
-            # hold values for some small amount of thread safety
-            state = self._state
-            period = self._period
-            color = self._color
+        try:
+            while self._state is not self.State.HALT:
+                # hold values for some small amount of thread safety
+                state = self._state
+                period = self._period
+                color = self._color
 
-            if state is self.State.ON:
-                self._write_color(color)
-                sleep(self.update_time)
-
-            if state is self.State.FADE:
-                num_steps = int(period / self.update_time / 2)  # number of steps before reversing direction
-                # This is some super pro-hacker moves
-                # Create a 2D array of values, with a column for each color component and a row for each step of the fade
-                up_steps = np.linspace((0, 0, 0), color, num_steps)
-                steps = np.concatenate((up_steps, up_steps[::-1]))
-                for step in steps:
-                    self._write_color(step)
+                if state is self.State.ON:
+                    self._write_color(color)
                     sleep(self.update_time)
 
-            if state is self.State.BLINK:
-                # Turn on
-                self._write_color(color)
-                sleep(period / 2.0)
-                # Turn off
-                self._write_color((0, 0, 0))
-                sleep(period / 2.0)
+                if state is self.State.FADE:
+                    num_steps = int(period / self.update_time / 2)  # number of steps before reversing direction
+                    # This is some super pro-hacker moves
+                    # Create a 2D array of values, with a column for each color component and a row for each step of the fade
+                    up_steps = np.linspace((0, 0, 0), color, num_steps)
+                    steps = np.concatenate((up_steps, up_steps[::-1]))
+                    for step in steps:
+                        self._write_color(step)
+                        sleep(self.update_time)
 
-        for channel in self.pwm_channels:
-            channel.stop()
+                if state is self.State.BLINK:
+                    # Turn on
+                    self._write_color(color)
+                    sleep(period / 2.0)
+                    # Turn off
+                    self._write_color((0, 0, 0))
+                    sleep(period / 2.0)
+        finally:
+            for channel in self.pwm_channels:
+                channel.stop()
 
 
 if __name__ == "__main__":
