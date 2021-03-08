@@ -15,6 +15,6 @@ def run_hardware_test():
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s',
+                        format='%(asctime)s - %(levelname)s - %(filename)s - %(message)s',
                         datefmt='%B %d, %Y %H:%M:%S')
     run_hardware_test()

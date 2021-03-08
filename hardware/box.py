@@ -105,8 +105,11 @@ class PiBox(ABC):
                     self.led.off()
 
                 # Shutdown when button is held
-                if self.btn.is_pressed() and (self.btn.get_held() > self.shutdown_time_s):
-                    return
+                held = self.btn.get_held()
+                if self.btn.is_pressed() and (held > self.shutdown_time_s):
+                    logging.info(f'Button held for {held}s, shutting down')
+                    self._running = False
+                    break
 
                 sys.stdout.flush()
                 time.sleep(self.loop_delay_s)
@@ -118,14 +121,14 @@ class PiBox(ABC):
 
     def _on_press(self):
         """ Callback function for button press """
-        logging.debug('Button pressed')
+        logging.info('Button pressed')
         self.last_press_time = time.time()
 
     def _cleanup(self):
         self._running = False  # End the API call thread
         self.led.halt()
         gpio.cleanup()
-        logging.debug('Ran Cleanup')
+        logging.info('Ran PiBox cleanup')
 
     def __del__(self):
         self._cleanup()

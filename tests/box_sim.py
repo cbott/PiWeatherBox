@@ -27,13 +27,15 @@ class BoxWindow(tk.Frame):
         self.led = tk.Label(text='⬤', foreground='#000000', font=tkinter.font.Font(size=64))
         self.led.pack()
 
-        self.button = tk.Button(text='', width=4, height=2, background='#AA0000', command=self._wrap_button_callback)
+        self.button = tk.Button(text='', width=4, height=2, background='#AA0000')
+        self.button.bind("<ButtonPress>", self._wrap_button_callback)
+        # TODO: bind <ButtonRelease> for button hold shutdown condition
         self.button.pack()
 
         self.master.wm_title("PiBox Sim")
         self.master.geometry("250x200")
 
-    def _wrap_button_callback(self):
+    def _wrap_button_callback(self, event: tk.Event):
         self.button_callback()
 
     def set_led_color(self, color: Color):

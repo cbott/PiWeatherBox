@@ -42,9 +42,9 @@ class WeatherBox(PiBox):
             next_temp = wc['today']['high']
             next_rain = wc['today']['rain']
 
-        logging.info(f'Prev Temp: {prev_temp}')
-        logging.info(f'Next Temp: {next_temp}')
-        logging.info(f'Next Rain: {next_rain}')
+        logging.debug(f'Prev Temp: {prev_temp}')
+        logging.debug(f'Next Temp: {next_temp}')
+        logging.debug(f'Next Rain: {next_rain}')
         temp_change = next_temp - prev_temp
         upcoming_rain = next_rain
 
