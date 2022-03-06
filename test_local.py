@@ -27,7 +27,7 @@ class FakeAPI:
         pass
 
     def conditions(self):
-        return {'yesterday': {'high': 55}, 'today': {'high': 65, 'rain': 1, 'conditions': 'weather'}, 'tomorrow': {'high': 75, 'rain': 1}}
+        return {'yesterday': {'high': 65}, 'today': {'high': 66, 'rain': 1, 'conditions': 'weather'}, 'tomorrow': {'high': 67, 'rain': 1}}
 #########################################
 
 

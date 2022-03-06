@@ -1,4 +1,5 @@
 # led.py
+import itertools
 import numpy as np
 import RPi.GPIO as gpio
 
@@ -86,33 +87,47 @@ class RGBLED():
         """ LED mainloop, executed in thread """
         # TODO: restructure to avoid long sleep times
         try:
+            prev_state = self._state
+            prev_color = self._color
+            prev_period = self._period
+            infinite_color_plan = itertools.cycle([prev_color])
+
             while self._state is not self.State.HALT:
                 # hold values for some small amount of thread safety
                 state = self._state
                 period = self._period
                 color = self._color
 
-                if state is self.State.ON:
-                    self._write_color(color)
-                    sleep(self.update_time)
+                if (state != prev_state) or (color != prev_color) or (period != prev_period):
+                    # State update has occurred, reset the color plan generator
+                    if state is self.State.ON:
+                        color_plan = [color]
 
-                if state is self.State.FADE:
-                    num_steps = int(period / self.update_time / 2)  # number of steps before reversing direction
-                    # This is some super pro-hacker moves
-                    # Create a 2D array of values, with a column for each color component and a row for each step of the fade
-                    up_steps = np.linspace((0, 0, 0), color, num_steps)
-                    steps = np.concatenate((up_steps, up_steps[::-1]))
-                    for step in steps:
-                        self._write_color(step)
-                        sleep(self.update_time)
+                    elif state is self.State.FADE:
+                        num_steps = int(period / self.update_time / 2.0)  # number of steps before reversing direction
+                        # This is some super pro-hacker moves
+                        # Create a 2D array of values, with a column for each color component and a row for each step of the fade
+                        up_steps = np.linspace((0, 0, 0), color, num_steps)
+                        color_plan = np.concatenate((up_steps, up_steps[::-1]))
 
-                if state is self.State.BLINK:
-                    # Turn on
-                    self._write_color(color)
-                    sleep(period / 2.0)
-                    # Turn off
-                    self._write_color((0, 0, 0))
-                    sleep(period / 2.0)
+                    elif state is self.State.BLINK:
+                        n_repeats = int(period / self.update_time / 2.0)
+                        color_plan = itertools.chain(
+                            itertools.repeat(color, n_repeats),
+                            itertools.repeat((0, 0, 0), n_repeats)
+                        )
+
+                    else:
+                        break
+
+                    infinite_color_plan = itertools.cycle(color_plan)
+
+                self._write_color(next(infinite_color_plan))
+                prev_state = state
+                prev_color = color
+                prev_period = period
+                sleep(self.update_time)
+
         finally:
             for channel in self.pwm_channels:
                 channel.stop()
