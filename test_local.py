@@ -1,30 +1,51 @@
 # test_local.py
 # Runs PiBox simulation to test without RPi hardware access
-
 import logging
 import sys
 import threading
-import time
-
 
 from unittest.mock import Mock, patch
+
+# Mock the Pi-Specific imports that would otherwise fail with module not found. Methods will be mocked later
 sys.modules['RPi'] = Mock()
 sys.modules['RPi.GPIO'] = Mock()
 
+# Mock any API modules - application specific behavior will be specified below
+sys.modules['api'] = Mock()
+
 from tests.box_sim import *
-from apps.testapp import TestBox
+
+
+# Application Specific
+########################################
+API_MODULE = 'api.weather'
+
+
+class FakeAPI:
+    """ Update FakeAPI methods to correctly mock the behavior of the real API in api/ """
+    def __init__(self):
+        pass
+
+    def conditions(self):
+        return {'yesterday': {'high': 55}, 'today': {'high': 65, 'rain': 1, 'conditions': 'weather'}, 'tomorrow': {'high': 75, 'rain': 1}}
+#########################################
 
 
 def run_local_test():
     """ Runs Box hardware class in thread, along with box simulator GUI """
     fake_box = BoxWindow(button_callback=lambda: True)
 
-    def fake_led_source(*args):
-        return FakeRGBLED(fake_box, *args)
+    def fake_pwm_factory(pin, freq):
+        return FakePWM(fake_box, pin, freq)
 
-    with patch('hardware.box.RGBLED', fake_led_source):
-        # Create real box
-        box = TestBox()
+    fakeapi = FakeAPI()
+
+    with patch('RPi.GPIO.PWM', fake_pwm_factory), patch(API_MODULE, fakeapi):
+        ########################################
+        from apps.piweatherbox import WeatherBox
+        box = WeatherBox()
+        ########################################
+
         fake_box.set_callback(box._on_press)
 
         # Run real box in thread

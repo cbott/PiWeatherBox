@@ -1,21 +1,38 @@
-import logging
-import numpy as np
-import random
-import threading
-import time
 import tkinter as tk
 import tkinter.font
 
+from collections import namedtuple
 from typing import Callable
 
-from hardware.led import Color
+# Duplicated from hardware.LED to avoid needing to import
+Color = namedtuple('Color', ['Red', 'Green', 'Blue'])
+
+
+def duty_cycle_to_intensity(duty_cycle: float) -> int:
+    """
+    Converts a 0-100 duty cycle to a 0-255 color intensity
+    Inverse of intensity_to_duty_cycle() from hardware.led
+    """
+    return int(duty_cycle * 255.0 / 100.0)
 
 
 class BoxWindow(tk.Frame):
     """
     Tk window with a "button" and "led" acting as a stand-in for the real hardware
     """
+    # Map "hardware" pin numbers to colors
+    RED_PIN = 16
+    GREEN_PIN = 20
+    BLUE_PIN = 21
+
     def __init__(self, button_callback: Callable):
+        # Store current RGB color values of the Fake LED (0-255)
+        self.current_color = {
+            self.RED_PIN: 0,
+            self.GREEN_PIN: 0,
+            self.BLUE_PIN: 0
+        }
+
         self.master = tk.Tk()
         tk.Frame.__init__(self, self.master)
 
@@ -34,79 +51,42 @@ class BoxWindow(tk.Frame):
 
         self.master.wm_title("PiBox Sim")
         self.master.geometry("250x200")
+        self._update_color()
 
     def _wrap_button_callback(self, event: tk.Event):
         self.button_callback()
 
-    def set_led_color(self, color: Color):
-        color_string = f'#{color.Red:02x}{color.Green:02x}{color.Blue:02x}'
+    def set_led_channel_duty_cycle(self, pin: int, duty_cycle: float):
+        self.current_color[pin] = duty_cycle_to_intensity(duty_cycle)
+
+    def _update_color(self):
+        """
+        Refresh the display every 50ms
+        If we try to call this every time the color updates it slows things down way too much
+        """
+        r = self.current_color[self.RED_PIN]
+        g = self.current_color[self.GREEN_PIN]
+        b = self.current_color[self.BLUE_PIN]
+        color_string = f'#{r:02x}{g:02x}{b:02x}'
         self.led['foreground'] = color_string
+
+        self.master.after(50, self._update_color)
 
     def set_callback(self, new_callback: Callable):
         self.button_callback = new_callback
 
 
-class FakeRGBLED():
-    """
-    Stand-in for hardware.led.RGBLED to be used with a BoxWindow instance
-    """
-    def __init__(self, window: BoxWindow, r_pin: int, g_pin: int, b_pin: int):
-        logging.info(f'Creating Fake RGB LED referenced to window {window!r}')
+class FakePWM:
+    """ Stand-in for RPi.GPIO.pwm to pass the relevant commands to the BoxWindow sim """
+    def __init__(self, window: BoxWindow, pin: int, freq: int):
+        self.pin = pin
         self.window = window
-        self.window.status_text['text'] = 'on'
 
-        # Initialize current state
-        self._state = "on"
-        self._color = Color(0, 0, 0)
-        self.update_time = 0.01  # seconds, time that update loop takes
+    def start(self, dutycycle: float):
+        self.window.set_led_channel_duty_cycle(self.pin, dutycycle)
 
-        # Start mainloop
-        _t = threading.Thread(target=self._loop)
-        _t.start()
+    def ChangeDutyCycle(self, dutycycle: float):
+        self.window.set_led_channel_duty_cycle(self.pin, dutycycle)
 
-    def halt(self):
-        self.window.status_text['text'] = 'halt'
-        self._state = 'halt'
-
-    def off(self):
-        self.set(Color(0, 0, 0))
-
-    def set(self, color: Color):
-        self._color = color
-        self.window.status_text['text'] = 'on'
-        self._state = "on"
-
-    def fade(self, color: Color, period=1):
-        self._period = period
-        self._color = color
-        self.window.status_text['text'] = 'fade'
-        self._state = 'fade'
-
-    def blink(self, color: Color, period=1):
-        self._period = period
-        self._color = color
-        self.window.status_text['text'] = 'blink'
-        self._state = 'blink'
-
-    def _loop(self):
-        while self._state != 'halt':
-            if self._state == 'on':
-                self.window.set_led_color(self._color)
-                time.sleep(self.update_time)
-
-            if self._state == 'fade':
-                pause = 0.05
-                num_steps = int(self._period / pause / 2)  # number of steps before reversing direction
-                up_steps = np.linspace((0, 0, 0), self._color, num_steps)
-                steps = np.array(np.concatenate((up_steps, up_steps[::-1])), dtype=int)
-                for step in steps:
-                    self.window.set_led_color(Color(*step))
-                    time.sleep(pause)
-
-            if self._state == 'blink':
-                # Turn on
-                self.window.set_led_color(self._color)
-                time.sleep(self._period / 2.0)
-                # Turn off
-                self.window.set_led_color(Color(0, 0, 0))
-                time.sleep(self._period / 2.0)
+    def stop(self):
+        pass
