@@ -3,7 +3,6 @@
 import logging
 import sys
 import threading
-
 from unittest.mock import Mock, patch
 
 # Mock the Pi-Specific imports that would otherwise fail with module not found. Methods will be mocked later
@@ -14,7 +13,6 @@ sys.modules['RPi.GPIO'] = Mock()
 sys.modules['api'] = Mock()
 
 from tests.box_sim import *
-
 
 # Application Specific
 ########################################
@@ -27,7 +25,7 @@ class FakeAPI:
         pass
 
     def conditions(self):
-        return {'yesterday': {'high': 65}, 'today': {'high': 66, 'rain': 1, 'conditions': 'weather'}, 'tomorrow': {'high': 67, 'rain': 1}}
+        return {'yesterday': {'high': 65}, 'today': {'high': 66, 'rain': 1, 'conditions': 'weather'}, 'tomorrow': {'high': 90, 'rain': 0}}
 #########################################
 
 

@@ -1,6 +1,5 @@
 import tkinter as tk
 import tkinter.font
-
 from collections import namedtuple
 from typing import Callable
 
@@ -69,6 +68,7 @@ class BoxWindow(tk.Frame):
         b = self.current_color[self.BLUE_PIN]
         color_string = f'#{r:02x}{g:02x}{b:02x}'
         self.led['foreground'] = color_string
+        self.status_text['text'] = color_string
 
         self.master.after(50, self._update_color)
 
